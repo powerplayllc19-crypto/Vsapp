@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Voice Secretary Assistant — Deployable Widget + Scheduler</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    :root{ --shadow: 0 18px 45px rgba(0,0,0,.22); }
+    .glass{ background: rgba(255,255,255,.78); backdrop-filter: blur(10px); }
+    .dark .glass{ background: rgba(10,10,10,.6); }
+    .no-scrollbar::-webkit-scrollbar{ width:0; height:0; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .step-number{ width:32px; height:32px; min-width:32px; }
+    @media (prefers-reduced-motion: reduce){
+      *{ scroll-behavior:auto !important; transition:none !important; animation:none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen selection:bg-indigo-200">
+  <div id="app" class="min-h-screen"></div>
+
+  <!-- Dashboard Template -->
+  <template id="tpl-dashboard">
+    <div class="min-h-screen">
+      <header class="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-600 to-fuchsia-600 shadow-sm flex items-center justify-center text-white font-bold">AI</div>
+            <div>
+              <div class="font-semibold leading-tight">AI Voice Secretary Assistant</div>
+              <div class="text-xs text-slate-500 leading-tight">Reusable deployable widget • voice • scheduling • FAQs • LLM connector</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnToggleTheme" class="px-3 py-2 text-sm rounded-xl border border-slate-200 bg-white hover:bg-slate-50">Theme</button>
+            <a id="btnOpenWidget" class="px-3 py-2 text-sm rounded-xl bg-indigo-600 text-white hover:bg-indigo-700" href="?widget=1">Open Widget Mode</a>
+          </div>
+        </div>
+      </header>
+
+      <!-- Navigation Tabs -->
+      <div class="bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4">
+          <nav class="flex gap-1 overflow-x-auto no-scrollbar">
+            <button data-tab="setup" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600">Setup</button>
+            <button data-tab="services" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900">Services & FAQs</button>
+            <button data-tab="preview" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900">Live Preview</button>
+            <button data-tab="deploy" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-slate-600 hover:text-slate-900">Deploy Guide</button>
+          </nav>
+        </div>
+      </div>
+
+      <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Setup Tab -->
+        <div id="tab-setup" class="tab-content">
+          <div class="grid lg:grid-cols-3 gap-6">
+            <!-- Branding Section -->
+            <div class="lg:col-span-2 space-y-6">
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+                  <h2 class="text-lg font-semibold flex items-center gap-2">🎨 Branding & Logo</h2>
+                  <p class="text-sm text-slate-600 mt-1">Customize how your assistant appears to customers</p>
+                </div>
+                <div class="p-5">
+                  <div class="flex items-start gap-6">
+                    <!-- Logo Preview -->
+                    <div class="flex-shrink-0">
+                      <div class="w-24 h-24 rounded-2xl border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50 overflow-hidden">
+                        <img id="logoPreview" class="w-full h-full object-cover hidden" alt="Logo">
+                        <span id="logoPlaceholder" class="text-slate-400 text-xs text-center px-2">No logo</span>
+                      </div>
+                      <input id="cfgLogoUpload" type="file" accept="image/*" class="hidden">
+                      <button id="btnUploadLogo" class="mt-2 w-full px-3 py-2 text-xs rounded-xl border border-slate-200 hover:bg-slate-50">Upload Logo</button>
+                    </div>
+                    <!-- Logo URL -->
+                    <div class="flex-1 space-y-4">
+                      <div>
+                        <label class="text-sm font-medium">Business Logo URL</label>
+                        <input id="cfgBusinessLogo" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="https://example.com/logo.png" />
+                        <p class="text-xs text-slate-500 mt-1">Enter a direct URL to your logo image, or upload above</p>
+                      </div>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="text-sm font-medium">Brand Color</label>
+                          <div class="flex gap-2 mt-1">
+                            <input id="cfgPrimaryColor" type="color" class="h-10 w-14 rounded-xl border border-slate-200 cursor-pointer" value="#4f46e5">
+                            <input id="cfgPrimaryColorText" class="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm mono" value="#4f46e5">
+                          </div>
+                        </div>
+                        <div>
+                          <label class="text-sm font-medium">Widget Position</label>
+                          <select id="cfgWidgetPosition" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                            <option value="bottom-right">Bottom Right</option>
+                            <option value="bottom-left">Bottom Left</option>
+                            <option value="top-right">Top Right</option>
+                            <option value="top-left">Top Left</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Business Info -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200">
+                  <h2 class="text-lg font-semibold">📋 Business Information</h2>
+                </div>
+                <div class="p-5 grid md:grid-cols-2 gap-4">
+                  <div class="md:col-span-2">
+                    <label class="text-sm font-medium">Business Name</label>
+                    <input id="cfgBusinessName" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="Acme Dental" />
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium">Business Email (receives bookings)</label>
+                    <input id="cfgBusinessInbox" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="bookings@acme.com" />
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium">Phone (optional)</label>
+                    <input id="cfgBusinessPhone" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="+1 (555) 123-4567" />
+                  </div>
+                  <div class="md:col-span-2">
+                    <label class="text-sm font-medium">Address (optional)</label>
+                    <input id="cfgBusinessAddress" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="123 Main St, City, State 12345" />
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium">Timezone</label>
+                    <input id="cfgTimezone" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="America/New_York" />
+                  </div>
+                  <div>
+                    <label class="text-sm font-medium">Locale</label>
+                    <input id="cfgLocale" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2" placeholder="en-US" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- AI Provider -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 bg-gradient-to-r from-green-50 to-emerald-50">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 class="text-lg font-semibold">🤖 AI Provider</h2>
+                      <p class="text-sm text-slate-600 mt-1">Use local FAQ logic or connect a free GPT API endpoint</p>
+                    </div>
+                    <select id="cfgAiMode" class="rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                      <option value="local">Local (rules + FAQ search)</option>
+                      <option value="openai">OpenAI-compatible API</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="openaiFields" class="p-5 space-y-4 hidden">
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="text-xs font-medium">Base URL</label>
+                      <input id="cfgAiBaseUrl" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="https://api.openai.com/v1" />
+                      <p class="text-xs text-slate-500 mt-1">Or use free APIs like: https://api.deepseek.com, https://api.groq.com/openai/v1</p>
+                    </div>
+                    <div>
+                      <label class="text-xs font-medium">Model</label>
+                      <input id="cfgAiModel" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="gpt-4o-mini" />
+                      <p class="text-xs text-slate-500 mt-1">Examples: gpt-4o-mini, llama3-8b-8192, mixtral-8x7b-32768</p>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-xs font-medium">API key (stored locally)</label>
+                    <input id="cfgAiKey" type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="sk-..." />
+                  </div>
+                  <div>
+                    <label class="text-xs font-medium">System Prompt</label>
+                    <textarea id="cfgAiSystemPrompt" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" rows="4" placeholder="You are a helpful voice receptionist..."></textarea>
+                  </div>
+                </div>
+                <div id="localFields" class="p-5">
+                  <p class="text-sm text-slate-600">Local mode uses keyword matching + Jaccard similarity on FAQs. No API key required.</p>
+                </div>
+              </div>
+
+              <!-- Email Settings -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 class="text-lg font-semibold">📧 Email Sending</h2>
+                      <p class="text-sm text-slate-600 mt-1">How appointment confirmations are sent</p>
+                    </div>
+                    <select id="cfgEmailMode" class="rounded-xl border border-slate-200 px-3 py-2 text-sm">
+                      <option value="mailto">Mailto (no backend)</option>
+                      <option value="emailjs">EmailJS (client-side)</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="emailjsFields" class="p-5 space-y-4 hidden">
+                  <div class="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <label class="text-xs font-medium">EmailJS Service ID</label>
+                      <input id="cfgEmailJsService" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="service_xxx" />
+                    </div>
+                    <div>
+                      <label class="text-xs font-medium">Template ID</label>
+                      <input id="cfgEmailJsTemplate" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="template_xxx" />
+                    </div>
+                    <div>
+                      <label class="text-xs font-medium">Public Key</label>
+                      <input id="cfgEmailJsPublic" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="public_xxx" />
+                    </div>
+                  </div>
+                  <p class="text-xs text-slate-500">Get free credentials at <a href="https://www.emailjs.com/" target="_blank" class="text-indigo-600 underline">emailjs.com</a></p>
+                </div>
+                <div id="mailtoFields" class="p-5">
+                  <p class="text-sm text-slate-600">Opens the user's default email client. No setup required.</p>
+                </div>
+              </div>
+
+              <!-- Premium Fetchers -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 bg-gradient-to-r from-amber-50 to-orange-50">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <h2 class="text-lg font-semibold">⚡ Premium Fetchers</h2>
+                      <p class="text-sm text-slate-600 mt-1">Load services/FAQs/hours from your customer's API endpoint</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="p-5 grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label class="text-xs font-medium">Services URL</label>
+                    <input id="fetchServicesUrl" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="https://api.example.com/services" />
+                  </div>
+                  <div>
+                    <label class="text-xs font-medium">FAQs URL</label>
+                    <input id="fetchFaqUrl" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="https://api.example.com/faqs" />
+                  </div>
+                  <div>
+                    <label class="text-xs font-medium">Hours URL</label>
+                    <input id="fetchHoursUrl" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="https://api.example.com/hours" />
+                  </div>
+                </div>
+                <div class="px-5 pb-5 flex flex-wrap gap-2">
+                  <button id="btnFetchAll" class="px-4 py-2 text-sm rounded-xl bg-amber-600 text-white hover:bg-amber-700">Fetch & Apply</button>
+                  <button id="btnClearFetchers" class="px-4 py-2 text-sm rounded-xl border border-slate-200 hover:bg-slate-50">Clear</button>
+                  <span id="fetchStatus" class="text-xs text-slate-600 self-center"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+                <h3 class="font-semibold mb-3">💾 Save Configuration</h3>
+                <div class="space-y-2">
+                  <button id="btnSaveConfig" class="w-full px-4 py-2 text-sm rounded-xl bg-indigo-600 text-white hover:bg-indigo-700">Save to Browser</button>
+                  <button id="btnResetConfig" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 hover:bg-slate-50">Reset to Defaults</button>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+                <h3 class="font-semibold mb-3">📤 Export / Import</h3>
+                <div class="space-y-2">
+                  <button id="btnCopyConfig" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 hover:bg-white">Copy JSON</button>
+                  <button id="btnDownloadConfig" class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 hover:bg-white">Download config.json</button>
+                  <label class="w-full px-4 py-2 text-sm rounded-xl border border-slate-200 hover:bg-white cursor-pointer block text-center">
+                    Import JSON
+                    <input id="fileImport" type="file" accept="application/json" class="hidden" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+                <h3 class="font-semibold mb-3">🔗 Quick Links</h3>
+                <div class="space-y-2 text-sm">
+                  <a href="?widget=1" class="block px-3 py-2 rounded-xl hover:bg-slate-50 text-indigo-600">→ Open Widget Mode</a>
+                  <a href="#tab-deploy" data-tab="deploy" class="tab-link block px-3 py-2 rounded-xl hover:bg-slate-50 text-indigo-600">→ Deployment Guide</a>
+                </div>
+              </div>
+
+              <div class="rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white p-5">
+                <h3 class="font-semibold mb-2">✨ Pro Tip</h3>
+                <p class="text-sm opacity-90">Configure your services and FAQs in the next tab, then preview your widget live!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Services & FAQs Tab -->
+        <div id="tab-services" class="tab-content hidden">
+          <div class="grid lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-6">
+              <!-- Services -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+                  <div>
+                    <h2 class="text-lg font-semibold">🛠️ Services</h2>
+                    <p class="text-sm text-slate-600">What the assistant can describe and schedule</p>
+                  </div>
+                  <button id="btnAddService" class="px-4 py-2 text-sm rounded-xl bg-indigo-600 text-white hover:bg-indigo-700">+ Add Service</button>
+                </div>
+                <div id="servicesList" class="p-5 space-y-4"></div>
+              </div>
+
+              <!-- FAQs -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex items-center justify-between">
+                  <div>
+                    <h2 class="text-lg font-semibold">❓ FAQs / Knowledge Base</h2>
+                    <p class="text-sm text-slate-600">Questions the assistant can answer</p>
+                  </div>
+                  <button id="btnAddFaq" class="px-4 py-2 text-sm rounded-xl bg-indigo-600 text-white hover:bg-indigo-700">+ Add FAQ</button>
+                </div>
+                <div id="faqList" class="p-5 space-y-4"></div>
+              </div>
+
+              <!-- Hours -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200">
+                  <h2 class="text-lg font-semibold">🕐 Business Hours</h2>
+                  <p class="text-sm text-slate-600">Configure when your business is open</p>
+                </div>
+                <div id="hoursList" class="p-5 space-y-3"></div>
+              </div>
+            </div>
+
+            <div class="space-y-6">
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+                <h3 class="font-semibold mb-3">💡 Best Practices</h3>
+                <ul class="text-sm text-slate-600 space-y-2">
+                  <li class="flex gap-2"><span>✓</span> Add clear service descriptions</li>
+                  <li class="flex gap-2"><span>✓</span> Include pricing when available</li>
+                  <li class="flex gap-2"><span>✓</span> Set accurate service duration</li>
+                  <li class="flex gap-2"><span>✓</span> Add FAQs for common questions</li>
+                  <li class="flex gap-2"><span>✓</span> Keep answers concise</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Tab -->
+        <div id="tab-preview" class="tab-content hidden">
+          <div class="grid lg:grid-cols-2 gap-6">
+            <div class="space-y-4">
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
+                <h2 class="text-lg font-semibold mb-3">🔍 Live Preview</h2>
+                <p class="text-sm text-slate-600 mb-4">This is exactly what your customers will see. Try it out!</p>
+                <div class="space-y-2">
+                  <button id="btnPreviewOpen" class="px-4 py-2 text-sm rounded-xl bg-indigo-600 text-white hover:bg-indigo-700">Open Widget</button>
+                  <button id="btnPreviewClose" class="px-4 py-2 text-sm rounded-xl border border-slate-200 hover:bg-slate-50">Close Widget</button>
+                </div>
+              </div>
+              <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-4">
+                <div class="text-sm font-medium mb-2">Test these prompts:</div>
+                <ul class="text-sm text-slate-600 space-y-1">
+                  <li>• "What services do you offer?"</li>
+                  <li>• "What are your hours?"</li>
+                  <li>• "How much is a consultation?"</li>
+                  <li>• "I want to book an appointment"</li>
+                </ul>
+              </div>
+            </div>
+            <div class="h-[600px] rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden relative">
+              <div class="absolute inset-0 p-4">
+                <div class="h-full rounded-2xl border border-slate-200 bg-white relative overflow-hidden">
+                  <div id="previewMount" class="h-full"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deploy Guide Tab -->
+        <div id="tab-deploy" class="tab-content hidden">
+          <div class="max-w-4xl mx-auto space-y-8">
+            <div class="text-center">
+              <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">🚀 Deployment Guide</h1>
+              <p class="text-slate-600 mt-2">Get your AI Voice Secretary Assistant up and running in minutes</p>
+            </div>
+
+            <!-- Features Overview -->
+            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+              <h2 class="text-xl font-semibold mb-4">✨ Premium Features Included</h2>
+              <div class="grid md:grid-cols-3 gap-4">
+                <div class="p-4 bg-indigo-50 rounded-xl">
+                  <div class="font-semibold text-indigo-900">🎤 Voice Input</div>
+                  <p class="text-sm text-indigo-700 mt-1">Speech recognition in 50+ languages</p>
+                </div>
+                <div class="p-4 bg-purple-50 rounded-xl">
+                  <div class="font-semibold text-purple-900">🔊 Voice Output</div>
+                  <p class="text-sm text-purple-700 mt-1">Text-to-speech responses</p>
+                </div>
+                <div class="p-4 bg-pink-50 rounded-xl">
+                  <div class="font-semibold text-pink-900">📅 Smart Booking</div>
+                  <p class="text-sm text-pink-700 mt-1">Appointment scheduling with confirmations</p>
+                </div>
+                <div class="p-4 bg-green-50 rounded-xl">
+                  <div class="font-semibold text-green-900">🤖 AI Powered</div>
+                  <p class="text-sm text-green-700 mt-1">Connect to any OpenAI-compatible API</p>
+                </div>
+                <div class="p-4 bg-blue-50 rounded-xl">
+                  <div class="font-semibold text-blue-900">📧 Email Alerts</div>
+                  <p class="text-sm text-blue-700 mt-1">Automatic booking confirmations</p>
+                </div>
+                <div class="p-4 bg-amber-50 rounded-xl">
+                  <div class="font-semibold text-amber-900">⚡ API Fetchers</div>
+                  <p class="text-sm text-amber-700 mt-1">Load data from external APIs</p>
+                </div>
+                <div class="p-4 bg-cyan-50 rounded-xl">
+                  <div class="font-semibold text-cyan-900">🎨 Custom Branding</div>
+                  <p class="text-sm text-cyan-700 mt-1">Logo, colors, and positioning</p>
+                </div>
+                <div class="p-4 bg-rose-50 rounded-xl">
+                  <div class="font-semibold text-rose-900">🌙 Dark Mode</div>
+                  <p class="text-sm text-rose-700 mt-1">Theme switching support</p>
+                </div>
+                <div class="p-4 bg-slate-100 rounded-xl">
+                  <div class="font-semibold text-slate-900">📱 Responsive</div>
+                  <p class="text-sm text-slate-700 mt-1">Works on all devices</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Step by Step -->
+            <div class="space-y-6">
+              <h2 class="text-xl font-semibold">📋 Step-by-Step GitHub Deployment</h2>
+
+              <!-- Step 1 -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex items-start gap-4">
+                  <div class="step-number rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">1</div>
+                  <div>
+                    <h3 class="font-semibold">Prepare Your Files</h3>
+                    <p class="text-sm text-slate-600 mt-1">Create a new folder with these files:</p>
+                  </div>
+                </div>
+                <div class="p-5 bg-slate-50">
+                  <pre class="text-sm mono bg-white border border-slate-200 rounded-xl p-4 overflow-x-auto">your-ai-assistant/
+├── index.html          (this file)
+├── config.json         (optional: per-customer config)
+└── README.md           (optional)</pre>
+                </div>
+              </div>
+
+              <!-- Step 2 -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex items-start gap-4">
+                  <div class="step-number rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">2</div>
+                  <div>
+                    <h3 class="font-semibold">Create a GitHub Repository</h3>
+                    <p class="text-sm text-slate-600 mt-1">Push your files to GitHub:</p>
+                  </div>
+                </div>
+                <div class="p-5 space-y-3">
+                  <div class="flex gap-2">
+                    <span class="px-2 py-1 bg-slate-100 rounded text-xs font-medium">Terminal</span>
+                  </div>
+                  <pre class="text-sm mono bg-slate-900 text-slate-100 rounded-xl p-4 overflow-x-auto"># Initialize git
+git init
+
+# Add all files
+git add .
+
+# Commit
+git commit -m "Initial commit: AI Voice Secretary"
+
+# Create a new repo at github.com/new, then:
+git remote add origin https://github.com/YOUR_USERNAME/your-ai-assistant.git
+git branch -M main
+git push -u origin main</pre>
+                </div>
+              </div>
+
+              <!-- Step 3 -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex items-start gap-4">
+                  <div class="step-number rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">3</div>
+                  <div>
+                    <h3 class="font-semibold">Deploy with GitHub Pages (Free)</h3>
+                    <p class="text-sm text-slate-600 mt-1">Enable GitHub Pages in your repository settings:</p>
+                  </div>
+                </div>
+                <div class="p-5 space-y-4">
+                  <ol class="text-sm space-y-2">
+                    <li>1. Go to your repository on GitHub</li>
+                    <li>2. Click <strong>Settings</strong> → <strong>Pages</strong> (left sidebar)</li>
+                    <li>3. Under "Build and deployment", select <strong>Source: Deploy from a branch</strong></li>
+                    <li>4. Select <strong>Branch: main</strong> and folder <strong>/ (root)</strong></li>
+                    <li>5. Click <strong>Save</strong></li>
+                    <li>6. Wait 1-2 minutes, your site will be live at <code class="mono bg-slate-100 px-1 rounded">https://YOUR_USERNAME.github.io/your-ai-assistant/</code></li>
+                  </ol>
+                </div>
+              </div>
+
+              <!-- Step 4 -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex items-start gap-4">
+                  <div class="step-number rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">4</div>
+                  <div>
+                    <h3 class="font-semibold">Configure Per-Customer</h3>
+                    <p class="text-sm text-slate-600 mt-1">Create a config.json for each customer:</p>
+                  </div>
+                </div>
+                <div class="p-5 bg-slate-50">
+                  <pre class="text-sm mono bg-white border border-slate-200 rounded-xl p-4 overflow-x-auto">{
+  "businessName": "Acme Dental",
+  "businessLogo": "https://example.com/logo.png",
+  "businessInbox": "bookings@acme.com",
+  "businessPhone": "+1 (555) 123-4567",
+  "businessAddress": "123 Main St, City, State 12345",
+  "primaryColor": "#4f46e5",
+  "widgetPosition": "bottom-right",
+  "timezone": "America/New_York",
+  "locale": "en-US",
+  "services": [
+    { "name": "Consultation", "durationMins": 30, "price": 49, "description": "Initial consultation" }
+  ],
+  "faqs": [
+    { "q": "Do you accept insurance?", "a": "Yes, we accept most major insurance plans." }
+  ],
+  "hours": {
+    "mon": ["09:00-17:00"],
+    "tue": ["09:00-17:00"],
+    "wed": ["09:00-17:00"],
+    "thu": ["09:00-17:00"],
+    "fri": ["09:00-16:00"],
+    "sat": [],
+    "sun": []
+  },
+  "email": { "mode": "emailjs", "emailjs": { "serviceId": "...", "templateId": "...", "publicKey": "..." } },
+  "ai": { "mode": "openai", "openai": { "baseUrl": "https://api.openai.com/v1", "apiKey": "...", "model": "gpt-4o-mini" } }
+}</pre>
+                </div>
+              </div>
+
+              <!-- Step 5 -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div class="p-5 border-b border-slate-200 flex items-start gap-4">
+                  <div class="step-number rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold">5</div>
+                  <div>
+                    <h3 class="font-semibold">Embed on Customer Website</h3>
+                    <p class="text-sm text-slate-600 mt-1">Add this code to your customer's website:</p>
+                  </div>
+                </div>
+                <div class="p-5 space-y-4">
+                  <div>
+                    <label class="text-xs font-medium">Option A: Iframe (Simplest)</label>
+                    <pre class="mt-1 text-sm mono bg-slate-900 text-slate-100 rounded-xl p-4 overflow-x-auto">&lt;!-- AI Voice Secretary --&gt;
+&lt;iframe
+  src="https://YOUR_USERNAME.github.io/your-ai-assistant/?widget=1&amp;configUrl=https://example.com/config.json"
+  style="border:0; width: 100%; height: 640px;"
+  loading="lazy"
+  title="AI Voice Assistant"
+&gt;&lt;/iframe&gt;</pre>
+                  </div>
+                  <div>
+                    <label class="text-xs font-medium">Option B: Floating Widget Overlay</label>
+                    <pre class="mt-1 text-sm mono bg-slate-900 text-slate-100 rounded-xl p-4 overflow-x-auto">&lt;!-- AI Voice Secretary Widget --&gt;
+&lt;div id="ai-assistant-container"&gt;&lt;/div&gt;
+&lt;script&gt;
+  (function() {
+    var container = document.getElementById('ai-assistant-container');
+    var iframe = document.createElement('iframe');
+    iframe.src = 'https://YOUR_USERNAME.github.io/your-ai-assistant/?widget=1&amp;configUrl=CONFIG_URL';
+    iframe.style.cssText = 'position:fixed;bottom:20px;right:20px;width:380px;height:600px;border:none;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,0.2);border-radius:16px;';
+    container.appendChild(iframe);
+  })();
+&lt;/script&gt;</pre>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Alternative Deployments -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+                <h3 class="font-semibold mb-4">🌐 Alternative Free Hosting Options</h3>
+                <div class="grid md:grid-cols-3 gap-4">
+                  <div class="p-4 border border-slate-200 rounded-xl">
+                    <div class="font-semibold">Netlify</div>
+                    <p class="text-xs text-slate-600 mt-1">Drag & drop deployment</p>
+                    <a href="https://netlify.com" target="_blank" class="text-indigo-600 text-xs hover:underline">netlify.com →</a>
+                  </div>
+                  <div class="p-4 border border-slate-200 rounded-xl">
+                    <div class="font-semibold">Vercel</div>
+                    <p class="text-xs text-slate-600 mt-1">GitHub integration</p>
+                    <a href="https://vercel.com" target="_blank" class="text-indigo-600 text-xs hover:underline">vercel.com →</a>
+                  </div>
+                  <div class="p-4 border border-slate-200 rounded-xl">
+                    <div class="font-semibold">Cloudflare Pages</div>
+                    <p class="text-xs text-slate-600 mt-1">Global CDN</p>
+                    <a href="https://pages.cloudflare.com" target="_blank" class="text-indigo-600 text-xs hover:underline">pages.cloudflare.com →</a>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Free AI APIs -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+                <h3 class="font-semibold mb-4">🆓 Free & Fast OpenAI-Compatible APIs</h3>
+                <p class="text-sm text-slate-600 mb-4">All of these work with our OpenAI-compatible setting. No server needed!</p>
+                
+                <!-- Top Recommendation -->
+                <div class="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xl">🏆</span>
+                    <span class="font-semibold text-green-800">Top Recommendation: Groq</span>
+                  </div>
+                  <p class="text-sm text-green-700 mt-2">Fastest inference available (up to 500 tokens/sec!). Perfect for real-time voice assistants. Generous free tier.</p>
+                  <div class="mt-3 grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span class="font-medium">Base URL:</span>
+                      <code class="mono bg-white px-2 py-1 rounded ml-1">https://api.groq.com/openai/v1</code>
+                    </div>
+                    <div>
+                      <span class="font-medium">Best Models:</span>
+                      <code class="mono bg-white px-2 py-1 rounded ml-1">llama-3.3-70b-versatile, mixtral-8x7b-32768</code>
+                    </div>
+                  </div>
+                  <a href="https://console.groq.com/keys" target="_blank" class="inline-block mt-3 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">Get Free API Key →</a>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <!-- DeepSeek -->
+                  <div class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors">
+                    <div class="flex items-center justify-between">
+                      <div class="font-semibold">DeepSeek</div>
+                      <span class="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs rounded-full">Very Cheap</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Excellent quality, extremely affordable. Great for production.</p>
+                    <div class="mt-2 space-y-1">
+                      <div class="text-xs"><span class="font-medium">Base:</span> <code class="mono bg-slate-100 px-1 rounded">https://api.deepseek.com</code></div>
+                      <div class="text-xs"><span class="font-medium">Model:</span> <code class="mono bg-slate-100 px-1 rounded">deepseek-chat</code></div>
+                    </div>
+                    <a href="https://platform.deepseek.com/api_keys" target="_blank" class="inline-block mt-3 text-xs text-indigo-600 hover:underline">Get API Key →</a>
+                  </div>
+
+                  <!-- OpenRouter -->
+                  <div class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors">
+                    <div class="flex items-center justify-between">
+                      <div class="font-semibold">OpenRouter</div>
+                      <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">Many Models</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Access 100+ models from one API. Pay-per-use, very competitive.</p>
+                    <div class="mt-2 space-y-1">
+                      <div class="text-xs"><span class="font-medium">Base:</span> <code class="mono bg-slate-100 px-1 rounded">https://openrouter.ai/api/v1</code></div>
+                      <div class="text-xs"><span class="font-medium">Model:</span> <code class="mono bg-slate-100 px-1 rounded">deepseek/deepseek-chat</code></div>
+                    </div>
+                    <a href="https://openrouter.ai/keys" target="_blank" class="inline-block mt-3 text-xs text-indigo-600 hover:underline">Get API Key →</a>
+                  </div>
+
+                  <!-- Hugging Face -->
+                  <div class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors">
+                    <div class="flex items-center justify-between">
+                      <div class="font-semibold">Hugging Face</div>
+                      <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Free Tier</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Free Inference API for thousands of open-source models.</p>
+                    <div class="mt-2 space-y-1">
+                      <div class="text-xs"><span class="font-medium">Base:</span> <code class="mono bg-slate-100 px-1 rounded">https://api-inference.huggingface.co</code></div>
+                      <div class="text-xs"><span class="font-medium">Model:</span> <code class="mono bg-slate-100 px-1 rounded">mistralai/Mistral-7B-Instruct</code></div>
+                    </div>
+                    <a href="https://huggingface.co/settings/tokens" target="_blank" class="inline-block mt-3 text-xs text-indigo-600 hover:underline">Get API Key →</a>
+                  </div>
+
+                  <!-- Together AI -->
+                  <div class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors">
+                    <div class="flex items-center justify-between">
+                      <div class="font-semibold">Together AI</div>
+                      <span class="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full">Free $25</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Fast inference with open-source models. $25 free credit.</p>
+                    <div class="mt-2 space-y-1">
+                      <div class="text-xs"><span class="font-medium">Base:</span> <code class="mono bg-slate-100 px-1 rounded">https://api.together.xyz/v1</code></div>
+                      <div class="text-xs"><span class="font-medium">Model:</span> <code class="mono bg-slate-100 px-1 rounded">mistralai/Mixtral-8x7B-Instruct</code></div>
+                    </div>
+                    <a href="https://api.together.xyz/settings/api-keys" target="_blank" class="inline-block mt-3 text-xs text-indigo-600 hover:underline">Get API Key →</a>
+                  </div>
+
+                  <!-- Novita AI -->
+                  <div class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors">
+                    <div class="flex items-center justify-between">
+                      <div class="font-semibold">Novita AI</div>
+                      <span class="px-2 py-0.5 bg-cyan-100 text-cyan-700 text-xs rounded-full">Very Cheap</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Ultra-low pricing. $0.06/M tokens for Llama 3.</p>
+                    <div class="mt-2 space-y-1">
+                      <div class="text-xs"><span class="font-medium">Base:</span> <code class="mono bg-slate-100 px-1 rounded">https://api.novita.ai/v3/openai</code></div>
+                      <div class="text-xs"><span class="font-medium">Model:</span> <code class="mono bg-slate-100 px-1 rounded">meta-llama/llama-3-8b-instruct</code></div>
+                    </div>
+                    <a href="https://novita.ai/settings/api-keys" target="_blank" class="inline-block mt-3 text-xs text-indigo-600 hover:underline">Get API Key →</a>
+                  </div>
+
+                  <!-- SiliconFlow -->
+                  <div class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors">
+                    <div class="flex items-center justify-between">
+                      <div class="font-semibold">SiliconFlow</div>
+                      <span class="px-2 py-0.5 bg-rose-100 text-rose-700 text-xs rounded-full">Free Tier</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Generous free tier with 14M tokens/day for some models.</p>
+                    <div class="mt-2 space-y-1">
+                      <div class="text-xs"><span class="font-medium">Base:</span> <code class="mono bg-slate-100 px-1 rounded">https://api.siliconflow.cn/v1</code></div>
+                      <div class="text-xs"><span class="font-medium">Model:</span> <code class="mono bg-slate-100 px-1 rounded">deepseek-ai/DeepSeek-V3</code></div>
+                    </div>
+                    <a href="https://cloud.siliconflow.cn/account/ak" target="_blank" class="inline-block mt-3 text-xs text-indigo-600 hover:underline">Get API Key →</a>
+                  </div>
+
+                  <!-- Google AI Studio -->
+                  <div class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors">
+                    <div class="flex items-center justify-between">
+                      <div class="font-semibold">Google AI Studio</div>
+                      <span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">Free Tier</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Gemini models via OpenAI-compatible endpoint. 15 requests/day free.</p>
+                    <div class="mt-2 space-y-1">
+                      <div class="text-xs"><span class="font-medium">Base:</span> <code class="mono bg-slate-100 px-1 rounded">https://generativelanguage.googleapis.com/v1beta/openai</code></div>
+                      <div class="text-xs"><span class="font-medium">Model:</span> <code class="mono bg-slate-100 px-1 rounded">gemini-2.0-flash-exp</code></div>
+                    </div>
+                    <a href="https://aistudio.google.com/apikey" target="_blank" class="inline-block mt-3 text-xs text-indigo-600 hover:underline">Get API Key →</a>
+                  </div>
+
+                  <!-- Anthropic via OpenRouter -->
+                  <div class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors">
+                    <div class="flex items-center justify-between">
+                      <div class="font-semibold">Claude (via OpenRouter)</div>
+                      <span class="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full">Premium</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">Access Claude models through OpenRouter aggregation.</p>
+                    <div class="mt-2 space-y-1">
+                      <div class="text-xs"><span class="font-medium">Base:</span> <code class="mono bg-slate-100 px-1 rounded">https://openrouter.ai/api/v1</code></div>
+                      <div class="text-xs"><span class="font-medium">Model:</span> <code class="mono bg-slate-100 px-1 rounded">anthropic/claude-3-haiku</code></div>
+                    </div>
+                  </div>
+
+                  <!-- OpenAI (Official) -->
+                  <div class="p-4 border border-slate-200 rounded-xl hover:border-indigo-300 transition-colors">
+                    <div class="flex items-center justify-between">
+                      <div class="font-semibold">OpenAI</div>
+                      <span class="px-2 py-0.5 bg-slate-100 text-slate-700 text-xs rounded-full">Official</span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-1">GPT-4o-mini is affordable and high quality. $5 free credit new users.</p>
+                    <div class="mt-2 space-y-1">
+                      <div class="text-xs"><span class="font-medium">Base:</span> <code class="mono bg-slate-100 px-1 rounded">https://api.openai.com/v1</code></div>
+                      <div class="text-xs"><span class="font-medium">Model:</span> <code class="mono bg-slate-100 px-1 rounded">gpt-4o-mini</code></div>
+                    </div>
+                    <a href="https://platform.openai.com/api-keys" target="_blank" class="inline-block mt-3 text-xs text-indigo-600 hover:underline">Get API Key →</a>
+                  </div>
+                </div>
+
+                <!-- Quick Setup -->
+                <div class="mt-6 p-4 bg-indigo-50 border border-indigo-200 rounded-xl">
+                  <div class="font-semibold text-indigo-900 mb-2">⚡ Quick Setup (3 steps)</div>
+                  <ol class="text-sm text-indigo-800 space-y-2">
+                    <li>1. Click "Get API Key" for your chosen provider (Groq recommended for speed)</li>
+                    <li>2. Copy the Base URL and Model name shown above</li>
+                    <li>3. Paste them into the <strong>Setup → AI Provider</strong> section in this dashboard</li>
+                  </ol>
+                </div>
+
+                <!-- IMPORTANT: API Key Security Warning -->
+                <div class="mt-6 p-5 bg-red-50 border-2 border-red-300 rounded-xl">
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🔐</span>
+                    <span class="font-bold text-red-800 text-lg">IMPORTANT: Why GitHub Blocked Your Project</span>
+                  </div>
+                  <div class="text-sm text-red-800 space-y-3">
+                    <p><strong>GitHub automatically scans for exposed API keys</strong> and blocks projects that contain them. This protects you from hackers who could steal your key and rack up charges on your account.</p>
+                    <p class="font-semibold">✅ The correct way to add your API key:</p>
+                  </div>
+                  <ol class="mt-3 text-sm text-red-800 space-y-2 list-decimal list-inside">
+                    <li><strong>Deploy the app first</strong> (without any API key in the code)</li>
+                    <li><strong>Open your deployed app</strong> in a browser</li>
+                    <li><strong>Go to Setup → AI Provider</strong> and select "OpenAI-compatible API"</li>
+                    <li><strong>Enter your API key</strong> in the password field (it's stored in your browser only)</li>
+                    <li><strong>Click "Save to Browser"</strong> - your key is now safely stored locally</li>
+                  </ol>
+                  <div class="mt-4 p-3 bg-white rounded-lg border border-red-200">
+                    <div class="font-semibold text-red-900">🛡️ Your API key is stored securely in localStorage</div>
+                    <p class="text-xs text-red-700 mt-1">It never gets uploaded to GitHub or any server. Each user/customer adds their own key through the dashboard interface.</p>
+                  </div>
+                </div>
+
+                <!-- Step by Step for Groq -->
+                <div class="mt-6 p-5 bg-green-50 border border-green-200 rounded-xl">
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="text-2xl">🚀</span>
+                    <span class="font-bold text-green-800 text-lg">How to Add Your Groq API Key (Step by Step)</span>
+                  </div>
+                  <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <div class="font-semibold text-green-900 mb-2">Step 1: Get Your Groq API Key</div>
+                      <ol class="text-sm text-green-800 space-y-1 list-decimal list-inside">
+                        <li>Go to <a href="https://console.groq.com/keys" target="_blank" class="underline font-medium">console.groq.com/keys</a></li>
+                        <li>Sign up or log in (free)</li>
+                        <li>Click "Create API Key"</li>
+                        <li>Copy the key (starts with <code class="bg-white px-1 rounded">gsk_</code>)</li>
+                      </ol>
+                    </div>
+                    <div>
+                      <div class="font-semibold text-green-900 mb-2">Step 2: Add to Your Deployed App</div>
+                      <ol class="text-sm text-green-800 space-y-1 list-decimal list-inside">
+                        <li>Open your deployed app URL</li>
+                        <li>Go to <strong>Setup</strong> tab</li>
+                        <li>Under "AI Provider", select <strong>OpenAI-compatible API</strong></li>
+                        <li>Base URL: <code class="bg-white px-1 rounded text-xs">https://api.groq.com/openai/v1</code></li>
+                        <li>Model: <code class="bg-white px-1 rounded text-xs">llama-3.3-70b-versatile</code></li>
+                        <li>Paste your API key in the password field</li>
+                        <li>Click <strong>"Save to Browser"</strong></li>
+                      </ol>
+                    </div>
+                  </div>
+                  <div class="mt-4 p-3 bg-green-100 rounded-lg">
+                    <div class="text-sm text-green-900"><strong>💡 Pro Tip:</strong> For customer deployments, each customer adds their own API key through the dashboard. You can also pre-configure everything except the API key in a config.json file.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer class="max-w-7xl mx-auto px-4 pb-10 text-xs text-slate-500">
+        <div class="border-t border-slate-200 pt-6 flex flex-wrap items-center justify-between gap-4">
+          <div>Built as a single-file deployable solution. No build step required.</div>
+          <div class="flex gap-4">
+            <a href="https://github.com" target="_blank" class="hover:text-indigo-600">GitHub</a>
+            <a href="https://www.emailjs.com" target="_blank" class="hover:text-indigo-600">EmailJS</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </template>
+
+  <!-- Widget Template -->
+  <template id="tpl-widget-shell">
+    <div class="h-full w-full relative">
+      <div id="floatingButton" class="absolute bottom-4 right-4 select-none">
+        <button id="btnLauncher" class="shadow-lg flex items-center gap-2 rounded-full text-white px-4 py-3 transition-all hover:scale-105" style="background: var(--primary-color, #4f46e5);">
+          <img id="launcherLogo" class="w-8 h-8 rounded-full object-cover hidden" alt="">
+          <span id="launcherText" class="font-semibold">Assistant</span>
+          <span class="text-xs opacity-90" id="launcherBadge">Voice</span>
+        </button>
+      </div>
+
+      <div id="panel" class="absolute bottom-20 right-4 w-[380px] max-w-[92vw] rounded-2xl border border-slate-200 shadow-[var(--shadow)] overflow-hidden bg-white hidden">
+        <div class="p-4 border-b border-slate-200 flex items-center justify-between" style="background: var(--primary-color, #4f46e5);">
+          <div class="flex items-center gap-3 min-w-0">
+            <img id="panelLogo" class="w-10 h-10 rounded-xl object-cover hidden" alt="">
+            <div class="min-w-0">
+              <div id="panelTitle" class="font-semibold text-white truncate">Assistant</div>
+              <div id="panelSubtitle" class="text-xs text-white/80 truncate">Ask about services or book an appointment.</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button id="btnTts" title="Toggle voice readback" class="px-2 py-1 text-xs rounded-lg bg-white/20 hover:bg-white/30 text-white">TTS</button>
+            <button id="btnMinimize" class="px-2 py-1 text-xs rounded-lg bg-white/20 hover:bg-white/30 text-white">Hide</button>
+          </div>
+        </div>
+
+        <div class="px-3 py-2 border-b border-slate-200 bg-slate-50">
+          <div class="flex flex-wrap gap-2">
+            <button data-quick="services" class="quick px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white hover:bg-slate-50">🛠️ Services</button>
+            <button data-quick="hours" class="quick px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white hover:bg-slate-50">🕐 Hours</button>
+            <button data-quick="pricing" class="quick px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white hover:bg-slate-50">💰 Pricing</button>
+            <button data-quick="book" class="quick px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white hover:bg-slate-50">📅 Book</button>
+          </div>
+        </div>
+
+        <div id="messages" class="h-[320px] overflow-auto p-4 space-y-3 bg-white"></div>
+
+        <div id="booking" class="border-t border-slate-200 bg-slate-50 hidden">
+          <div class="p-4">
+            <div class="font-semibold">Schedule an appointment</div>
+            <div class="text-xs text-slate-600">Fill in the details below</div>
+          </div>
+          <form id="bookingForm" class="px-4 pb-4 grid grid-cols-2 gap-3">
+            <div class="col-span-2">
+              <label class="text-xs font-medium">Service</label>
+              <select id="bkService" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm"></select>
+            </div>
+            <div>
+              <label class="text-xs font-medium">Name</label>
+              <input id="bkName" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Jane" required />
+            </div>
+            <div>
+              <label class="text-xs font-medium">Email</label>
+              <input id="bkEmail" type="email" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="jane@email.com" required />
+            </div>
+            <div class="col-span-2 grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-xs font-medium">Preferred date</label>
+                <input id="bkDate" type="date" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" required />
+              </div>
+              <div>
+                <label class="text-xs font-medium">Preferred time</label>
+                <input id="bkTime" type="time" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" required />
+              </div>
+            </div>
+            <div class="col-span-2">
+              <label class="text-xs font-medium">Notes</label>
+              <textarea id="bkNotes" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" rows="2" placeholder="Any details (optional)"></textarea>
+            </div>
+            <div class="col-span-2 flex items-center justify-between gap-2">
+              <button type="button" id="bkCancel" class="px-4 py-2 text-sm rounded-xl border border-slate-200 bg-white hover:bg-slate-50">Cancel</button>
+              <button type="submit" id="bkSubmit" class="px-4 py-2 text-sm rounded-xl text-white" style="background: var(--primary-color, #4f46e5);">Send request</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="p-4 border-t border-slate-200 bg-white">
+          <div class="flex items-end gap-2">
+            <div class="flex-1">
+              <label class="text-xs text-slate-600">Message</label>
+              <input id="input" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="Ask a question or say 'book an appointment'" />
+            </div>
+            <button id="btnMic" class="px-3 py-2 rounded-xl border border-slate-200 hover:bg-slate-50" title="Voice input">🎙️</button>
+            <button id="btnSend" class="px-3 py-2 rounded-xl text-white" style="background: var(--primary-color, #4f46e5);" title="Send">Send</button>
+          </div>
+          <div class="mt-2 flex items-center justify-between">
+            <div id="voiceStatus" class="text-xs text-slate-500">Voice: idle</div>
+            <div class="text-xs text-slate-500">Powered by <span id="aiModeBadge" class="font-medium">local</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal -->
+      <div id="modal" class="absolute inset-0 bg-black/40 hidden items-center justify-center p-4">
+        <div class="w-full max-w-lg rounded-2xl bg-white border border-slate-200 shadow-[var(--shadow)] overflow-hidden">
+          <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+            <div class="font-semibold">Confirmation</div>
+            <button id="modalClose" class="px-2 py-1 text-xs rounded-lg border border-slate-200 hover:bg-slate-50">Close</button>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="text-sm" id="modalMsg"></div>
+            <div>
+              <div class="text-xs text-slate-600">Email preview</div>
+              <pre id="modalEmail" class="mt-1 text-xs mono bg-slate-50 border border-slate-200 rounded-xl p-3 overflow-auto max-h-56 no-scrollbar"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    /***********************
+     * Utilities
+     ************************/
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    function safeJsonParse(txt){
+      try { return JSON.parse(txt); } catch { return null; }
+    }
+
+    function deepClone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+    function formatHours(hours){
+      const order = ["mon","tue","wed","thu","fri","sat","sun"];
+      const labels = { mon:"Mon", tue:"Tue", wed:"Wed", thu:"Thu", fri:"Fri", sat:"Sat", sun:"Sun" };
+      return order.map(d => {
+        const v = hours?.[d];
+        if(!v || !v.length) return `${labels[d]}: Closed`;
+        return `${labels[d]}: ${v.join(", ")}`;
+      }).join("\n");
+    }
+
+    function nowIso(){ return new Date().toISOString(); }
+
+    function downloadText(filename, text){
+      const blob = new Blob([text], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function tokenize(str){
+      return (str||"").toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/).filter(Boolean);
+    }
+
+    function jaccard(aTokens, bTokens){
+      const A = new Set(aTokens);
+      const B = new Set(bTokens);
+      const inter = [...A].filter(x => B.has(x)).length;
+      const uni = new Set([...A, ...B]).size;
+      return uni ? inter/uni : 0;
+    }
+
+    function escapeHtml(s){
+      return String(s ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+    }
+
+    /***********************
+     * Default Config
+     ************************/
+    const DEFAULT_CONFIG = {
+      version: 2,
+      businessName: "Acme Services",
+      businessLogo: "",
+      businessInbox: "bookings@example.com",
+      businessPhone: "",
+      businessAddress: "",
+      primaryColor: "#4f46e5",
+      widgetPosition: "bottom-right",
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+      locale: navigator.language || "en-US",
+      services: [
+        { name: "Consultation", durationMins: 30, price: 49, description: "A quick consult to understand your needs." },
+        { name: "Premium Service", durationMins: 60, price: 129, description: "Deep-dive service appointment." }
+      ],
+      hours: {
+        mon: ["09:00-17:00"],
+        tue: ["09:00-17:00"],
+        wed: ["09:00-17:00"],
+        thu: ["09:00-17:00"],
+        fri: ["09:00-16:00"],
+        sat: [],
+        sun: []
+      },
+      faqs: [
+        { q: "Do you accept walk-ins?", a: "We recommend booking in advance. Same-day requests may be available depending on capacity." },
+        { q: "What is your cancellation policy?", a: "Please cancel at least 24 hours in advance to avoid fees." },
+        { q: "Where are you located?", a: "We are an online-first business. If you need an in-person visit, ask and we'll share the correct address." }
+      ],
+      email: {
+        mode: "mailto",
+        emailjs: { serviceId: "", templateId: "", publicKey: "" }
+      },
+      ai: {
+        mode: "local",
+        openai: {
+          baseUrl: "https://api.groq.com/openai/v1",
+          apiKey: "",
+          model: "llama-3.3-70b-versatile",
+          systemPrompt: "You are a professional voice receptionist for {{businessName}}.\n\nYour goals:\n- Answer questions about services, pricing, and hours using the provided catalog and FAQs.\n- When the user wants to book, collect: service, name, email, preferred date, preferred time, and notes.\n- Be concise, friendly, and accurate.\n- If you don't know, ask a clarifying question or offer to take a booking request."
+        }
+      }
+    };
+
+    const STORAGE_KEY = "avs_config_v2";
+
+    function loadConfig(){
+      const saved = safeJsonParse(localStorage.getItem(STORAGE_KEY) || "");
+      const cfg = saved && typeof saved === 'object' ? saved : deepClone(DEFAULT_CONFIG);
+      cfg.version = 2;
+      cfg.services = Array.isArray(cfg.services) ? cfg.services : deepClone(DEFAULT_CONFIG.services);
+      cfg.faqs = Array.isArray(cfg.faqs) ? cfg.faqs : deepClone(DEFAULT_CONFIG.faqs);
+      cfg.hours = cfg.hours && typeof cfg.hours === 'object' ? cfg.hours : deepClone(DEFAULT_CONFIG.hours);
+      cfg.email = cfg.email && typeof cfg.email === 'object' ? cfg.email : deepClone(DEFAULT_CONFIG.email);
+      cfg.ai = cfg.ai && typeof cfg.ai === 'object' ? cfg.ai : deepClone(DEFAULT_CONFIG.ai);
+      return cfg;
+    }
+
+    function saveConfig(cfg){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg, null, 2));
+    }
+
+    /***********************
+     * Widget Class
+     ************************/
+    class VoiceAssistantWidget {
+      constructor(mountEl, config, opts={}){
+        this.mountEl = mountEl;
+        this.config = config;
+        this.opts = opts;
+        this.state = {
+          open: false,
+          tts: false,
+          listening: false,
+          messages: [],
+          bookingOpen: false,
+          busy: false
+        };
+        this.recognition = null;
+        this.synth = window.speechSynthesis || null;
+      }
+
+      render(){
+        const tpl = document.getElementById('tpl-widget-shell');
+        this.mountEl.innerHTML = '';
+        this.mountEl.appendChild(tpl.content.cloneNode(true));
+
+        const color = this.config.primaryColor || '#4f46e5';
+        this.mountEl.style.setProperty('--primary-color', color);
+
+        const position = this.config.widgetPosition || 'bottom-right';
+        const btn = $('#floatingButton', this.mountEl);
+        const panel = $('#panel', this.mountEl);
+
+        btn.className = `absolute bottom-4 right-4 select-none`;
+        panel.className = `absolute bottom-20 right-4 w-[380px] max-w-[92vw] rounded-2xl border border-slate-200 shadow-[var(--shadow)] overflow-hidden bg-white hidden`;
+
+        if(position === 'bottom-left'){
+          btn.className = 'absolute bottom-4 left-4 select-none';
+          panel.className = 'absolute bottom-20 left-4 w-[380px] max-w-[92vw] rounded-2xl border border-slate-200 shadow-[var(--shadow)] overflow-hidden bg-white hidden';
+        } else if(position === 'top-right'){
+          btn.className = 'absolute top-4 right-4 select-none';
+          panel.className = 'absolute top-16 right-4 w-[380px] max-w-[92vw] rounded-2xl border border-slate-200 shadow-[var(--shadow)] overflow-hidden bg-white hidden';
+        } else if(position === 'top-left'){
+          btn.className = 'absolute top-4 left-4 select-none';
+          panel.className = 'absolute top-16 left-4 w-[380px] max-w-[92vw] rounded-2xl border border-slate-200 shadow-[var(--shadow)] overflow-hidden bg-white hidden';
+        }
+
+        this.el = {
+          launcher: $('#btnLauncher', this.mountEl),
+          launcherLogo: $('#launcherLogo', this.mountEl),
+          launcherText: $('#launcherText', this.mountEl),
+          panel: $('#panel', this.mountEl),
+          panelLogo: $('#panelLogo', this.mountEl),
+          minimize: $('#btnMinimize', this.mountEl),
+          messages: $('#messages', this.mountEl),
+          input: $('#input', this.mountEl),
+          send: $('#btnSend', this.mountEl),
+          mic: $('#btnMic', this.mountEl),
+          voiceStatus: $('#voiceStatus', this.mountEl),
+          aiModeBadge: $('#aiModeBadge', this.mountEl),
+          title: $('#panelTitle', this.mountEl),
+          subtitle: $('#panelSubtitle', this.mountEl),
+          ttsBtn: $('#btnTts', this.mountEl),
+          booking: $('#booking', this.mountEl),
+          bookingForm: $('#bookingForm', this.mountEl),
+          bkService: $('#bkService', this.mountEl),
+          bkName: $('#bkName', this.mountEl),
+          bkEmail: $('#bkEmail', this.mountEl),
+          bkDate: $('#bkDate', this.mountEl),
+          bkTime: $('#bkTime', this.mountEl),
+          bkNotes: $('#bkNotes', this.mountEl),
+          bkCancel: $('#bkCancel', this.mountEl),
+          bkSubmit: $('#bkSubmit', this.mountEl),
+          launcherBadge: $('#launcherBadge', this.mountEl),
+          modal: $('#modal', this.mountEl),
+          modalClose: $('#modalClose', this.mountEl),
+          modalMsg: $('#modalMsg', this.mountEl),
+          modalEmail: $('#modalEmail', this.mountEl)
+        };
+
+        this.el.title.textContent = this.config.businessName || 'Assistant';
+        this.el.launcherText.textContent = this.config.businessName || 'Assistant';
+        this.el.aiModeBadge.textContent = this.config.ai?.mode || 'local';
+
+        // Logo handling
+        if(this.config.businessLogo){
+          this.el.launcherLogo.src = this.config.businessLogo;
+          this.el.launcherLogo.classList.remove('hidden');
+          this.el.panelLogo.src = this.config.businessLogo;
+          this.el.panelLogo.classList.remove('hidden');
+        }
+
+        this._wire();
+        this._initVoice();
+        this._refreshServiceOptions();
+        this._ensureWelcome();
+        this._updateUI();
+      }
+
+      _wire(){
+        this.el.launcher.addEventListener('click', () => {
+          this.state.open = !this.state.open;
+          this._updateUI();
+          if(this.state.open) setTimeout(() => this.el.input.focus(), 50);
+        });
+
+        this.el.minimize.addEventListener('click', () => {
+          this.state.open = false;
+          this._updateUI();
+        });
+
+        this.el.send.addEventListener('click', () => this._sendFromInput());
+        this.el.input.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter') this._sendFromInput();
+        });
+
+        this.el.mic.addEventListener('click', () => this._toggleListening());
+
+        this.el.ttsBtn.addEventListener('click', () => {
+          this.state.tts = !this.state.tts;
+          this.el.ttsBtn.classList.toggle('bg-white', this.state.tts);
+          this.el.ttsBtn.textContent = this.state.tts ? 'TTS: On' : 'TTS';
+          if(!this.state.tts && this.synth) this.synth.cancel();
+        });
+
+        $$('.quick', this.mountEl).forEach(btn => {
+          btn.addEventListener('click', () => {
+            const q = btn.getAttribute('data-quick');
+            const map = {
+              services: "What services do you offer?",
+              hours: "What are your hours?",
+              pricing: "What are your prices?",
+              book: "I want to book an appointment."
+            };
+            this._sendUser(map[q] || q);
+          });
+        });
+
+        this.el.bkCancel.addEventListener('click', () => {
+          this.state.bookingOpen = false;
+          this._updateUI();
+        });
+
+        this.el.bookingForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          this._submitBooking();
+        });
+
+        this.el.modalClose.addEventListener('click', () => this._hideModal());
+        this.el.modal.addEventListener('click', (e) => {
+          if(e.target === this.el.modal) this._hideModal();
+        });
+      }
+
+      _updateUI(){
+        this.el.panel.classList.toggle('hidden', !this.state.open);
+        this.el.booking.classList.toggle('hidden', !this.state.bookingOpen);
+        this.el.aiModeBadge.textContent = this.config.ai?.mode || 'local';
+        const voiceOk = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+        this.el.launcherBadge.textContent = voiceOk ? 'Voice' : 'Text';
+      }
+
+      _ensureWelcome(){
+        if(this.state.messages.length) return;
+        const sCount = this.config.services?.length || 0;
+        this._pushAssistant(`Hi! I'm the virtual secretary for ${this.config.businessName || 'this business'}.\n\nI can answer questions about services (${sCount} available), hours, and pricing — and I can help schedule an appointment.`);
+      }
+
+      _renderMessages(){
+        const wrap = this.el.messages;
+        wrap.innerHTML = '';
+        for(const m of this.state.messages){
+          const isUser = m.role === 'user';
+          const row = document.createElement('div');
+          row.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
+          const bubble = document.createElement('div');
+          const color = this.config.primaryColor || '#4f46e5';
+          bubble.className = isUser
+            ? 'max-w-[85%] rounded-2xl rounded-br-md text-white px-4 py-2 text-sm whitespace-pre-wrap'
+            : 'max-w-[85%] rounded-2xl rounded-bl-md bg-slate-100 text-slate-900 px-4 py-2 text-sm whitespace-pre-wrap';
+          if(isUser) bubble.style.background = color;
+          bubble.textContent = m.content;
+          row.appendChild(bubble);
+          wrap.appendChild(row);
+        }
+        wrap.scrollTop = wrap.scrollHeight;
+      }
+
+      _pushUser(text){
+        this.state.messages.push({role:'user', content: text, ts: nowIso()});
+        this._renderMessages();
+      }
+
+      _pushAssistant(text){
+        this.state.messages.push({role:'assistant', content: text, ts: nowIso()});
+        this._renderMessages();
+        if(this.state.tts) this._speak(text);
+      }
+
+      _speak(text){
+        if(!this.synth) return;
+        try{
+          this.synth.cancel();
+          const u = new SpeechSynthesisUtterance(text);
+          u.lang = this.config.locale || navigator.language || 'en-US';
+          this.synth.speak(u);
+        }catch{}
+      }
+
+      _initVoice(){
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if(!SR){
+          this.el.voiceStatus.textContent = 'Voice: unavailable';
+          this.el.mic.disabled = true;
+          this.el.mic.classList.add('opacity-50', 'cursor-not-allowed');
+          return;
+        }
+        const rec = new SR();
+        rec.lang = this.config.locale || navigator.language || 'en-US';
+        rec.interimResults = true;
+        rec.continuous = false;
+        this.recognition = rec;
+
+        let finalText = '';
+
+        rec.onstart = () => {
+          this.state.listening = true;
+          this.el.voiceStatus.textContent = 'Voice: listening…';
+          this.el.mic.classList.add('bg-slate-900','text-white');
+        };
+        rec.onerror = () => {
+          this.state.listening = false;
+          this.el.mic.classList.remove('bg-slate-900','text-white');
+        };
+        rec.onend = () => {
+          this.state.listening = false;
+          this.el.mic.classList.remove('bg-slate-900','text-white');
+          this.el.voiceStatus.textContent = 'Voice: idle';
+          const t = (finalText || '').trim();
+          finalText = '';
+          if(t){
+            this.el.input.value = t;
+            this._sendFromInput();
+          }
+        };
+        rec.onresult = (event) => {
+          let interim = '';
+          for(let i=event.resultIndex; i<event.results.length; i++){
+            const r = event.results[i];
+            if(r.isFinal) finalText += r[0].transcript;
+            else interim += r[0].transcript;
+          }
+          const shown = (finalText + ' ' + interim).trim();
+          this.el.voiceStatus.textContent = shown ? `Voice: "${shown.slice(0, 50)}${shown.length>50?'…':''}"` : 'Voice: listening…';
+        };
+      }
+
+      _toggleListening(){
+        if(!this.recognition) return;
+        if(this.state.listening){
+          try{ this.recognition.stop(); } catch {}
+          return;
+        }
+        try{ this.recognition.start(); } catch {}
+      }
+
+      _sendFromInput(){
+        const t = (this.el.input.value || '').trim();
+        if(!t) return;
+        this.el.input.value = '';
+        this._sendUser(t);
+      }
+
+      async _sendUser(text){
+        if(this.state.busy) return;
+        this._pushUser(text);
+
+        if(this._looksLikeBookingIntent(text)){
+          this._pushAssistant("Sure — I can help with that. Please fill in the appointment details below.");
+          this._openBooking();
+          return;
+        }
+
+        this.state.busy = true;
+        try{
+          let answer;
+          if((this.config.ai?.mode || 'local') === 'openai'){
+            answer = await this._answerWithOpenAI(text);
+          } else {
+            answer = await this._answerLocally(text);
+          }
+          if(answer && answer.__openBooking){
+            this._pushAssistant(answer.text);
+            this._openBooking();
+          } else {
+            this._pushAssistant(answer.text || answer || "I'm not sure yet — could you tell me a bit more?");
+          }
+        } catch (err){
+          this._pushAssistant(`I ran into a problem. ${String(err?.message || err)}`);
+        } finally {
+          this.state.busy = false;
+        }
+      }
+
+      _looksLikeBookingIntent(text){
+        return /(book|booking|appointment|schedule|reschedule|set up|reserve)\b/i.test(text);
+      }
+
+      _openBooking(){
+        this.state.bookingOpen = true;
+        this._refreshServiceOptions();
+        this._updateUI();
+        setTimeout(() => this.el.bkService.focus(), 50);
+      }
+
+      _refreshServiceOptions(){
+        const sel = this.el?.bkService;
+        if(!sel) return;
+        sel.innerHTML = '';
+        for(const s of this.config.services || []){
+          const opt = document.createElement('option');
+          opt.value = s.name;
+          opt.textContent = `${s.name}${s.durationMins ? ` • ${s.durationMins}m` : ''}${s.price != null ? ` • $${s.price}` : ''}`;
+          sel.appendChild(opt);
+        }
+      }
+
+      async _answerLocally(text){
+        const t = (text||'').toLowerCase();
+
+        if(/\b(services|offer|do you do|what do you do|menu)\b/.test(t)){
+          const list = (this.config.services || []).map(s => `• ${s.name}${s.description?`: ${s.description}`:''}`).join("\n");
+          return {text: list ? `Here are the services we offer:\n${list}\n\nIf you'd like, tell me which one you want and I can help book it.` : "No services are configured yet."};
+        }
+
+        if(/\b(hours|open|closing|close|when are you open|availability)\b/.test(t)){
+          return {text: `Our hours:\n${formatHours(this.config.hours)}\n\nIf you tell me a preferred day/time, I can take a booking request.`};
+        }
+
+        if(/\b(price|pricing|cost|how much|rate|fee)\b/.test(t)){
+          const list = (this.config.services || []).map(s => `• ${s.name}: ${s.price!=null?`$${s.price}`:'(pricing on request)'}`).join("\n");
+          return {text: list ? `Pricing (if listed):\n${list}` : "Pricing isn't configured yet."};
+        }
+
+        if(this._looksLikeBookingIntent(t)){
+          return {text: "Absolutely — let's schedule that.", __openBooking: true};
+        }
+
+        const faqs = this.config.faqs || [];
+        const qtoks = tokenize(text);
+        let best = null, bestScore = 0;
+        for(const f of faqs){
+          const score = jaccard(qtoks, tokenize(f.q + ' ' + f.a));
+          if(score > bestScore){ bestScore = score; best = f; }
+        }
+        if(best && bestScore >= 0.14){
+          return {text: best.a};
+        }
+
+        const hint = `I can help with:\n• Services & pricing\n• Hours\n• Booking an appointment\n\nTry: "What services do you offer?" or "Book an appointment for next week".`;
+        return {text: `I don't have a confident answer from the configured FAQs.\n\n${hint}`};
+      }
+
+      _buildGroundingContext(){
+        return {
+          businessName: this.config.businessName,
+          businessInbox: this.config.businessInbox,
+          businessPhone: this.config.businessPhone,
+          businessAddress: this.config.businessAddress,
+          timezone: this.config.timezone,
+          locale: this.config.locale,
+          services: this.config.services,
+          hours: this.config.hours,
+          faqs: this.config.faqs
+        };
+      }
+
+      async _answerWithOpenAI(text){
+        const o = this.config.ai?.openai || {};
+        if(!o.baseUrl){
+          return {text: "AI mode is set to OpenAI-compatible, but Base URL is empty. Please configure it in the dashboard."};
+        }
+        const sys = (o.systemPrompt || DEFAULT_CONFIG.ai.openai.systemPrompt || '')
+          .replaceAll('{{businessName}}', this.config.businessName || 'the business');
+        const context = this._buildGroundingContext();
+
+        const history = this.state.messages.slice(-10).map(m => ({role: m.role, content: m.content}));
+
+        const body = {
+          model: o.model || 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: sys },
+            { role: 'system', content: `Business data (JSON):\n${JSON.stringify(context)}` },
+            ...history,
+            { role: 'user', content: text }
+          ],
+          temperature: 0.4
+        };
+
+        const url = o.baseUrl.replace(/\/$/, '') + '/chat/completions';
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(o.apiKey ? {'Authorization': `Bearer ${o.apiKey}`} : {})
+          },
+          body: JSON.stringify(body)
+        });
+
+        if(!res.ok){
+          const errText = await res.text().catch(()=>"");
+          throw new Error(`LLM request failed (${res.status}). ${errText.slice(0, 200)}`);
+        }
+
+        const data = await res.json();
+        const content = data?.choices?.[0]?.message?.content;
+        const msg = (content || '').trim();
+        if(!msg) return {text: "AI didn't return any text."};
+
+        if(this._looksLikeBookingIntent(msg) && /fill|form|details|schedule/i.test(msg)){
+          return {text: msg, __openBooking: true};
+        }
+        return {text: msg};
+      }
+
+      async _submitBooking(){
+        const booking = {
+          id: crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()),
+          ts: nowIso(),
+          businessName: this.config.businessName,
+          businessInbox: this.config.businessInbox,
+          service: this.el.bkService.value,
+          name: (this.el.bkName.value||'').trim(),
+          email: (this.el.bkEmail.value||'').trim(),
+          date: this.el.bkDate.value,
+          time: this.el.bkTime.value,
+          notes: (this.el.bkNotes.value||'').trim(),
+          timezone: this.config.timezone
+        };
+
+        if(!booking.name || !booking.email || !booking.date || !booking.time){
+          this._pushAssistant("Please fill in name, email, date, and time.");
+          return;
+        }
+
+        const key = 'avs_bookings_v2';
+        const prev = safeJsonParse(localStorage.getItem(key) || '[]') || [];
+        prev.push(booking);
+        localStorage.setItem(key, JSON.stringify(prev, null, 2));
+
+        const subj = `${this.config.businessName}: Appointment request — ${booking.service}`;
+        const bodyLines = [
+          `Hello ${booking.name},`,
+          '',
+          `This is a confirmation that we received your appointment request for ${this.config.businessName}.`,
+          '',
+          `Service: ${booking.service}`,
+          `Preferred date: ${booking.date}`,
+          `Preferred time: ${booking.time} (${booking.timezone || 'local time'})`,
+          booking.notes ? `Notes: ${booking.notes}` : null,
+          '',
+          'We will follow up to confirm the final time.',
+          '',
+          `— ${this.config.businessName}`
+        ].filter(Boolean);
+
+        const emailPreview = {
+          to: booking.email,
+          cc: this.config.businessInbox,
+          subject: subj,
+          body: bodyLines.join('\n')
+        };
+
+        this.state.bookingOpen = false;
+        this._updateUI();
+        this._pushAssistant(`Thanks, ${booking.name}. I've recorded your request for ${booking.service} on ${booking.date} at ${booking.time}. I'll send a confirmation email next.`);
+        await this._sendEmail(emailPreview, booking);
+        this._showModal(`Booking request captured. Confirmation flow: <span class="font-medium">${this.config.email?.mode || 'mailto'}</span>.`, emailPreview);
+      }
+
+      async _sendEmail(emailPreview, booking){
+        const mode = this.config.email?.mode || 'mailto';
+
+        if(mode === 'emailjs'){
+          const ej = this.config.email?.emailjs || {};
+          if(!ej.serviceId || !ej.templateId || !ej.publicKey){
+            this._pushAssistant("EmailJS is selected but not configured.");
+            return;
+          }
+          try{
+            emailjs.init({ publicKey: ej.publicKey });
+            const vars = {
+              to_email: emailPreview.to,
+              cc_email: emailPreview.cc,
+              subject: emailPreview.subject,
+              message: emailPreview.body,
+              business_name: this.config.businessName,
+              booking_service: booking.service,
+              booking_name: booking.name,
+              booking_date: booking.date,
+              booking_time: booking.time
+            };
+            await emailjs.send(ej.serviceId, ej.templateId, vars);
+          } catch (e){
+            this._pushAssistant(`EmailJS send failed: ${String(e?.text || e?.message || e)}`);
+          }
+          return;
+        }
+
+        const to = encodeURIComponent(emailPreview.to);
+        const subject = encodeURIComponent(emailPreview.subject);
+        const cc = encodeURIComponent(emailPreview.cc || '');
+        const body = encodeURIComponent(emailPreview.body);
+        window.location.href = `mailto:${to}?subject=${subject}${cc ? `&cc=${cc}`:''}&body=${body}`;
+      }
+
+      _showModal(htmlMessage, emailPreview){
+        this.el.modalMsg.innerHTML = htmlMessage;
+        this.el.modalEmail.textContent = JSON.stringify(emailPreview, null, 2);
+        this.el.modal.classList.remove('hidden');
+        this.el.modal.classList.add('flex');
+      }
+
+      _hideModal(){
+        this.el.modal.classList.add('hidden');
+        this.el.modal.classList.remove('flex');
+      }
+    }
+
+    /***********************
+     * Dashboard
+     ************************/
+    function isWidgetMode(){
+      return new URL(location.href).searchParams.get('widget') === '1';
+    }
+
+    async function maybeLoadRemoteConfig(cfg){
+      const u = new URL(location.href);
+      const configUrl = u.searchParams.get('configUrl');
+      if(!configUrl) return cfg;
+      try{
+        const res = await fetch(configUrl, {cache:'no-store'});
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const remote = await res.json();
+        return {...cfg, ...remote, services: remote.services ?? cfg.services, faqs: remote.faqs ?? cfg.faqs, hours: remote.hours ?? cfg.hours};
+      } catch (e){
+        console.warn('Config load failed', e);
+        return cfg;
+      }
+    }
+
+    function renderDashboard(app, cfg){
+      const tpl = document.getElementById('tpl-dashboard');
+      app.innerHTML = '';
+      app.appendChild(tpl.content.cloneNode(true));
+
+      // Theme
+      const applyTheme = (mode) => {
+        document.documentElement.classList.toggle('dark', mode === 'dark');
+        document.body.className = (mode === 'dark')
+          ? 'bg-slate-950 text-slate-50 min-h-screen selection:bg-indigo-500/40'
+          : 'bg-slate-50 text-slate-900 min-h-screen selection:bg-indigo-200';
+      };
+      const themeKey = 'avs_theme';
+      applyTheme(localStorage.getItem(themeKey) || 'light');
+      $('#btnToggleTheme').addEventListener('click', () => {
+        const next = localStorage.getItem(themeKey) === 'light' ? 'dark' : 'light';
+        localStorage.setItem(themeKey, next);
+        applyTheme(next);
+      });
+
+      // Tabs
+      const switchTab = (tabId) => {
+        $$('.tab-content').forEach(el => el.classList.add('hidden'));
+        $(`#tab-${tabId}`).classList.remove('hidden');
+        $$('.tab-btn').forEach(btn => {
+          const isActive = btn.dataset.tab === tabId;
+          btn.classList.toggle('border-indigo-600', isActive);
+          btn.classList.toggle('text-indigo-600', isActive);
+          btn.classList.toggle('border-transparent', !isActive);
+          btn.classList.toggle('text-slate-600', !isActive);
+        });
+      };
+      $$('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+      $$('.tab-link').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          switchTab(btn.dataset.tab);
+        });
+      });
+
+      const bind = () => {
+        $('#cfgBusinessName').value = cfg.businessName || '';
+        $('#cfgBusinessInbox').value = cfg.businessInbox || '';
+        $('#cfgBusinessPhone').value = cfg.businessPhone || '';
+        $('#cfgBusinessAddress').value = cfg.businessAddress || '';
+        $('#cfgBusinessLogo').value = cfg.businessLogo || '';
+        $('#cfgPrimaryColor').value = cfg.primaryColor || '#4f46e5';
+        $('#cfgPrimaryColorText').value = cfg.primaryColor || '#4f46e5';
+        $('#cfgWidgetPosition').value = cfg.widgetPosition || 'bottom-right';
+        $('#cfgTimezone').value = cfg.timezone || '';
+        $('#cfgLocale').value = cfg.locale || '';
+
+        $('#cfgEmailMode').value = cfg.email?.mode || 'mailto';
+        $('#cfgEmailJsService').value = cfg.email?.emailjs?.serviceId || '';
+        $('#cfgEmailJsTemplate').value = cfg.email?.emailjs?.templateId || '';
+        $('#cfgEmailJsPublic').value = cfg.email?.emailjs?.publicKey || '';
+
+        $('#cfgAiMode').value = cfg.ai?.mode || 'local';
+        $('#cfgAiBaseUrl').value = cfg.ai?.openai?.baseUrl || '';
+        $('#cfgAiModel').value = cfg.ai?.openai?.model || '';
+        $('#cfgAiKey').value = cfg.ai?.openai?.apiKey || '';
+        $('#cfgAiSystemPrompt').value = cfg.ai?.openai?.systemPrompt || '';
+
+        $('#emailjsFields').classList.toggle('hidden', cfg.email?.mode !== 'emailjs');
+        $('#mailtoFields').classList.toggle('hidden', cfg.email?.mode === 'emailjs');
+        $('#openaiFields').classList.toggle('hidden', cfg.ai?.mode !== 'openai');
+        $('#localFields').classList.toggle('hidden', cfg.ai?.mode === 'openai');
+      };
+
+      const readBack = () => {
+        cfg.businessName = ($('#cfgBusinessName').value || '').trim();
+        cfg.businessInbox = ($('#cfgBusinessInbox').value || '').trim();
+        cfg.businessPhone = ($('#cfgBusinessPhone').value || '').trim();
+        cfg.businessAddress = ($('#cfgBusinessAddress').value || '').trim();
+        cfg.businessLogo = ($('#cfgBusinessLogo').value || '').trim();
+        cfg.primaryColor = ($('#cfgPrimaryColor').value || '#4f46e5').trim();
+        cfg.widgetPosition = ($('#cfgWidgetPosition').value || 'bottom-right').trim();
+        cfg.timezone = ($('#cfgTimezone').value || '').trim();
+        cfg.locale = ($('#cfgLocale').value || '').trim();
+
+        cfg.email = cfg.email || {};
+        cfg.email.mode = $('#cfgEmailMode').value;
+        cfg.email.emailjs = cfg.email.emailjs || {};
+        cfg.email.emailjs.serviceId = ($('#cfgEmailJsService').value || '').trim();
+        cfg.email.emailjs.templateId = ($('#cfgEmailJsTemplate').value || '').trim();
+        cfg.email.emailjs.publicKey = ($('#cfgEmailJsPublic').value || '').trim();
+
+        cfg.ai = cfg.ai || {};
+        cfg.ai.mode = $('#cfgAiMode').value;
+        cfg.ai.openai = cfg.ai.openai || {};
+        cfg.ai.openai.baseUrl = ($('#cfgAiBaseUrl').value || '').trim();
+        cfg.ai.openai.model = ($('#cfgAiModel').value || '').trim();
+        cfg.ai.openai.apiKey = ($('#cfgAiKey').value || '').trim();
+        cfg.ai.openai.systemPrompt = ($('#cfgAiSystemPrompt').value || '').trim();
+      };
+
+      // Logo upload
+      $('#btnUploadLogo').addEventListener('click', () => $('#cfgLogoUpload').click());
+      $('#cfgLogoUpload').addEventListener('change', (e) => {
+        const file = e.target.files?.[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          $('#logoPreview').src = ev.target.result;
+          $('#logoPreview').classList.remove('hidden');
+          $('#logoPlaceholder').classList.add('hidden');
+          cfg.businessLogo = ev.target.result;
+          refreshPreview();
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // Color sync
+      $('#cfgPrimaryColor').addEventListener('input', (e) => {
+        $('#cfgPrimaryColorText').value = e.target.value;
+        cfg.primaryColor = e.target.value;
+        refreshPreview();
+      });
+      $('#cfgPrimaryColorText').addEventListener('input', (e) => {
+        if(/^#[0-9A-Fa-f]{6}$/.test(e.target.value)){
+          $('#cfgPrimaryColor').value = e.target.value;
+          cfg.primaryColor = e.target.value;
+          refreshPreview();
+        }
+      });
+
+      const renderServices = () => {
+        const root = $('#servicesList');
+        root.innerHTML = '';
+        (cfg.services || []).forEach((s, idx) => {
+          const card = document.createElement('div');
+          card.className = 'rounded-xl border border-slate-200 p-4 bg-white';
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <span class="font-medium">Service ${idx+1}</span>
+              <button class="btnRemove px-2 py-1 text-xs rounded-lg border border-red-200 text-red-600 hover:bg-red-50">Remove</button>
+            </div>
+            <div class="grid md:grid-cols-4 gap-3">
+              <div class="md:col-span-2">
+                <label class="text-xs font-medium">Name</label>
+                <input class="name mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" value="${escapeHtml(s.name||'')}">
+              </div>
+              <div>
+                <label class="text-xs font-medium">Duration (min)</label>
+                <input class="dur mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" type="number" min="0" value="${s.durationMins??''}">
+              </div>
+              <div>
+                <label class="text-xs font-medium">Price</label>
+                <input class="price mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" type="number" step="0.01" min="0" value="${s.price??''}">
+              </div>
+              <div class="md:col-span-4">
+                <label class="text-xs font-medium">Description</label>
+                <input class="desc mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" value="${escapeHtml(s.description||'')}">
+              </div>
+            </div>
+          `;
+          $('.btnRemove', card).addEventListener('click', () => {
+            cfg.services.splice(idx, 1);
+            renderServices();
+            refreshPreview();
+          });
+          const sync = () => {
+            s.name = $('.name', card).value;
+            s.durationMins = Number($('.dur', card).value || 0);
+            s.price = $('.price', card).value === '' ? '' : Number($('.price', card).value);
+            s.description = $('.desc', card).value;
+            refreshPreview();
+          };
+          $$('.name, .dur, .price, .desc', card).forEach(inp => inp.addEventListener('input', sync));
+          root.appendChild(card);
+        });
+      };
+
+      const renderFaqs = () => {
+        const root = $('#faqList');
+        root.innerHTML = '';
+        (cfg.faqs || []).forEach((f, idx) => {
+          const card = document.createElement('div');
+          card.className = 'rounded-xl border border-slate-200 p-4 bg-white';
+          card.innerHTML = `
+            <div class="flex items-start justify-between gap-2 mb-3">
+              <span class="font-medium">FAQ ${idx+1}</span>
+              <button class="btnRemove px-2 py-1 text-xs rounded-lg border border-red-200 text-red-600 hover:bg-red-50">Remove</button>
+            </div>
+            <div class="space-y-3">
+              <div>
+                <label class="text-xs font-medium">Question</label>
+                <input class="q mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" value="${escapeHtml(f.q||'')}">
+              </div>
+              <div>
+                <label class="text-xs font-medium">Answer</label>
+                <textarea class="a mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" rows="2">${escapeHtml(f.a||'')}</textarea>
+              </div>
+            </div>
+          `;
+          $('.btnRemove', card).addEventListener('click', () => {
+            cfg.faqs.splice(idx, 1);
+            renderFaqs();
+            refreshPreview();
+          });
+          const sync = () => {
+            f.q = $('.q', card).value;
+            f.a = $('.a', card).value;
+            refreshPreview();
+          };
+          $$('.q, .a', card).forEach(inp => inp.addEventListener('input', sync));
+          root.appendChild(card);
+        });
+      };
+
+      const renderHours = () => {
+        const root = $('#hoursList');
+        root.innerHTML = '';
+        const days = ['mon','tue','wed','thu','fri','sat','sun'];
+        const labels = { mon:'Monday', tue:'Tuesday', wed:'Wednesday', thu:'Thursday', fri:'Friday', sat:'Saturday', sun:'Sunday' };
+        days.forEach(d => {
+          const card = document.createElement('div');
+          const hours = cfg.hours?.[d] || [];
+          card.className = 'flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white';
+          card.innerHTML = `
+            <span class="w-24 text-sm font-medium">${labels[d]}</span>
+            <input class="hours-input flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm" data-day="${d}" value="${hours.join(', ')}" placeholder="e.g., 09:00-17:00 or 09:00-12:00, 13:00-17:00">
+          `;
+          root.appendChild(card);
+        });
+        $$('.hours-input', root).forEach(inp => {
+          inp.addEventListener('input', () => {
+            const day = inp.dataset.day;
+            const val = inp.value.trim();
+            cfg.hours = cfg.hours || {};
+            cfg.hours[day] = val ? val.split(',').map(s => s.trim()).filter(Boolean) : [];
+            refreshPreview();
+          });
+        });
+      };
+
+      // Fetchers
+      $('#btnFetchAll').addEventListener('click', async () => {
+        $('#fetchStatus').textContent = 'Fetching…';
+        const sUrl = ($('#fetchServicesUrl').value || '').trim();
+        const fUrl = ($('#fetchFaqUrl').value || '').trim();
+        const hUrl = ($('#fetchHoursUrl').value || '').trim();
+        try{
+          if(sUrl){
+            const r = await fetch(sUrl, {cache:'no-store'});
+            if(!r.ok) throw new Error(`Services: HTTP ${r.status}`);
+            const j = await r.json();
+            if(!Array.isArray(j)) throw new Error('Services must be an array');
+            cfg.services = j;
+          }
+          if(fUrl){
+            const r = await fetch(fUrl, {cache:'no-store'});
+            if(!r.ok) throw new Error(`FAQs: HTTP ${r.status}`);
+            const j = await r.json();
+            if(!Array.isArray(j)) throw new Error('FAQs must be an array');
+            cfg.faqs = j;
+          }
+          if(hUrl){
+            const r = await fetch(hUrl, {cache:'no-store'});
+            if(!r.ok) throw new Error(`Hours: HTTP ${r.status}`);
+            const j = await r.json();
+            if(!j || typeof j !== 'object') throw new Error('Hours must be an object');
+            cfg.hours = j;
+          }
+          renderServices();
+          renderFaqs();
+          renderHours();
+          refreshPreview();
+          $('#fetchStatus').textContent = 'Applied ✅';
+          setTimeout(() => $('#fetchStatus').textContent = '', 2500);
+        } catch (e){
+          $('#fetchStatus').textContent = String(e?.message || e);
+        }
+      });
+      $('#btnClearFetchers').addEventListener('click', () => {
+        $('#fetchServicesUrl').value = '';
+        $('#fetchFaqUrl').value = '';
+        $('#fetchHoursUrl').value = '';
+        $('#fetchStatus').textContent = '';
+      });
+
+      // Mode toggles
+      $('#cfgEmailMode').addEventListener('change', () => { bind(); readBack(); refreshPreview(); });
+      $('#cfgAiMode').addEventListener('change', () => { bind(); readBack(); refreshPreview(); });
+
+      // Save/reset
+      $('#btnSaveConfig').addEventListener('click', () => {
+        readBack();
+        saveConfig(cfg);
+        refreshPreview();
+        toast('Saved to browser storage.');
+      });
+      $('#btnResetConfig').addEventListener('click', () => {
+        cfg = deepClone(DEFAULT_CONFIG);
+        bind();
+        renderServices();
+        renderFaqs();
+        renderHours();
+        saveConfig(cfg);
+        refreshPreview();
+        toast('Reset to defaults.');
+      });
+
+      // Add items
+      $('#btnAddService').addEventListener('click', () => {
+        cfg.services = cfg.services || [];
+        cfg.services.push({name:"New Service", durationMins: 30, price: 0, description:""});
+        renderServices();
+        refreshPreview();
+      });
+      $('#btnAddFaq').addEventListener('click', () => {
+        cfg.faqs = cfg.faqs || [];
+        cfg.faqs.push({q:"New question?", a:"Answer..."});
+        renderFaqs();
+        refreshPreview();
+      });
+
+      // Export/import
+      $('#btnCopyConfig').addEventListener('click', async () => {
+        readBack();
+        try{
+          await navigator.clipboard.writeText(JSON.stringify(cfg, null, 2));
+          toast('Config copied!');
+        } catch {
+          toast('Copy failed');
+        }
+      });
+      $('#btnDownloadConfig').addEventListener('click', () => {
+        readBack();
+        downloadText('config.json', JSON.stringify(cfg, null, 2));
+      });
+      $('#fileImport').addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if(!file) return;
+        const j = safeJsonParse(await file.text());
+        if(!j){ toast('Invalid JSON'); return; }
+        cfg = {...deepClone(DEFAULT_CONFIG), ...j};
+        bind();
+        renderServices();
+        renderFaqs();
+        renderHours();
+        saveConfig(cfg);
+        refreshPreview();
+        toast('Imported!');
+      });
+
+      // Preview
+      let widget = null;
+      const mount = $('#previewMount');
+      const refreshPreview = () => {
+        readBack();
+        if(widget){
+          widget.config = deepClone(cfg);
+          widget.render();
+        } else {
+          widget = new VoiceAssistantWidget(mount, deepClone(cfg), {preview:true});
+          widget.render();
+        }
+      };
+
+      $('#btnPreviewOpen').addEventListener('click', () => {
+        if(!widget) refreshPreview();
+        if(widget?.el?.launcher) widget.el.launcher.click();
+      });
+      $('#btnPreviewClose').addEventListener('click', () => {
+        if(widget?.state){ widget.state.open = false; widget._updateUI(); }
+      });
+
+      $('#btnOpenWidget').href = `?widget=1`;
+
+      // Initial
+      bind();
+      renderServices();
+      renderFaqs();
+      renderHours();
+      refreshPreview();
+
+      function toast(msg){
+        const d = document.createElement('div');
+        d.className = 'fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-sm px-4 py-2 rounded-xl shadow-lg';
+        d.textContent = msg;
+        document.body.appendChild(d);
+        setTimeout(() => d.remove(), 2200);
+      }
+    }
+
+    function renderWidgetOnly(app, cfg){
+      app.innerHTML = `
+        <div class="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+          <div class="max-w-5xl mx-auto px-4 py-12">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <div class="text-xs uppercase tracking-wide text-slate-500">Embedded Widget Mode</div>
+                <h1 class="text-2xl font-semibold mt-1 flex items-center gap-3">
+                  ${cfg.businessLogo ? `<img src="${escapeHtml(cfg.businessLogo)}" class="w-10 h-10 rounded-xl object-cover" alt="">` : ''}
+                  ${escapeHtml(cfg.businessName || 'Assistant')}
+                </h1>
+                <p class="text-sm text-slate-600 mt-1">Click the Assistant button (bottom-right) to get started.</p>
+              </div>
+              <a href="./" class="px-4 py-2 text-sm rounded-xl border border-slate-200 bg-white hover:bg-slate-50">Open Dashboard</a>
+            </div>
+            ${cfg.businessAddress ? `<p class="mt-4 text-sm text-slate-600">📍 ${escapeHtml(cfg.businessAddress)}</p>` : ''}
+            ${cfg.businessPhone ? `<p class="mt-1 text-sm text-slate-600">📞 ${escapeHtml(cfg.businessPhone)}</p>` : ''}
+          </div>
+          <div id="widgetMount" class="fixed inset-0 pointer-events-none">
+            <div class="absolute inset-0 pointer-events-auto"></div>
+          </div>
+        </div>
+      `;
+      const w = new VoiceAssistantWidget($('#widgetMount'), deepClone(cfg), {widget:true});
+      w.render();
+    }
+
+    /***********************
+     * Boot
+     ************************/
+    (async function main(){
+      const app = document.getElementById('app');
+      let cfg = loadConfig();
+      cfg = await maybeLoadRemoteConfig(cfg);
+
+      if(isWidgetMode()){
+        renderWidgetOnly(app, cfg);
+      } else {
+        renderDashboard(app, cfg);
+      }
+    })();
+  </script>
+</body>
+</html>
