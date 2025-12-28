@@ -154,22 +154,32 @@
                 <div id="openaiFields" class="p-5 space-y-4 hidden">
                   <div class="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label class="text-xs font-medium">Base URL</label>
+                      <div class="flex items-center justify-between">
+                        <label class="text-xs font-medium">Base URL</label>
+                        <button id="btnAiQuickGroq" class="text-[10px] text-indigo-600 hover:underline">Set Groq</button>
+                      </div>
                       <input id="cfgAiBaseUrl" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="https://api.openai.com/v1" />
-                      <p class="text-xs text-slate-500 mt-1">Or use free APIs like: https://api.deepseek.com, https://api.groq.com/openai/v1</p>
+                      <p class="text-xs text-slate-500 mt-1">Free/Fast: https://api.groq.com/openai/v1</p>
                     </div>
                     <div>
                       <label class="text-xs font-medium">Model</label>
                       <input id="cfgAiModel" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="gpt-4o-mini" />
-                      <p class="text-xs text-slate-500 mt-1">Examples: gpt-4o-mini, llama3-8b-8192, mixtral-8x7b-32768</p>
+                      <p class="text-xs text-slate-500 mt-1">e.g., llama-3.3-70b-versatile</p>
                     </div>
                   </div>
                   <div>
-                    <label class="text-xs font-medium">API key (stored locally)</label>
-                    <input id="cfgAiKey" type="password" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="sk-..." />
+                    <label class="text-xs font-medium">API key (Stored in your browser, never uploaded)</label>
+                    <div class="flex gap-2">
+                      <input id="cfgAiKey" type="password" class="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm" placeholder="sk-..." />
+                      <button id="btnShowKey" class="px-3 py-2 text-xs rounded-xl border border-slate-200 hover:bg-slate-50">Show</button>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <button id="btnTestAi" class="flex-1 px-4 py-2 text-xs font-medium rounded-xl bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50">Test Connection</button>
+                    <span id="testAiStatus" class="text-xs font-medium"></span>
                   </div>
                   <div>
-                    <label class="text-xs font-medium">System Prompt</label>
+                    <label class="text-xs font-medium">System Prompt (Context for AI)</label>
                     <textarea id="cfgAiSystemPrompt" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm" rows="4" placeholder="You are a helpful voice receptionist..."></textarea>
                   </div>
                 </div>
@@ -266,6 +276,12 @@
                     <input id="fileImport" type="file" accept="application/json" class="hidden" />
                   </label>
                 </div>
+              </div>
+
+              <div class="rounded-2xl border-2 border-indigo-100 bg-indigo-50 p-5 shadow-sm">
+                <h3 class="font-semibold text-indigo-900 mb-3 flex items-center gap-2">📦 Get Embed Code</h3>
+                <p class="text-xs text-indigo-700 mb-4">Ready to install on a website?</p>
+                <button id="btnGenerateEmbed" class="w-full px-4 py-3 text-sm rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-sm transition-all">Copy Embed Snippet</button>
               </div>
 
               <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-5">
@@ -810,6 +826,329 @@ git push -u origin main</pre>
                   </div>
                 </div>
               </div>
+
+              <!-- Common Questions Section -->
+              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+                <h3 class="font-semibold mb-6 text-xl flex items-center gap-2">❓ Common Questions</h3>
+                
+                <div class="space-y-4">
+                  <!-- Getting Started -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">How do I get started quickly?</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 space-y-2 border-t border-slate-200">
+                      <ol class="list-decimal list-inside space-y-1">
+                        <li>Download this HTML file</li>
+                        <li>Create a new GitHub repository</li>
+                        <li>Upload the file and enable GitHub Pages</li>
+                        <li>Open your live site and configure via the dashboard</li>
+                        <li>Add your Groq API key (free, fast, no credit card)</li>
+                        <li>Customize services, FAQs, and branding</li>
+                        <li>Click "Save to Browser" - you're live!</li>
+                      </ol>
+                      <p class="mt-3 text-green-700 font-medium">⏱️ Total time: ~5 minutes</p>
+                    </div>
+                  </details>
+
+                  <!-- Voice Features -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">How does voice input/output work?</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 space-y-2 border-t border-slate-200">
+                      <p><strong>Voice Input (Speech-to-Text):</strong></p>
+                      <ul class="list-disc list-inside ml-2 space-y-1">
+                        <li>Uses the Web Speech API (built into Chrome, Edge, Safari)</li>
+                        <li>Click the 🎙️ microphone button to start speaking</li>
+                        <li>Supports 50+ languages automatically</li>
+                        <li>No additional cost - runs entirely in the browser</li>
+                      </ul>
+                      <p class="mt-3"><strong>Voice Output (Text-to-Speech):</strong></p>
+                      <ul class="list-disc list-inside ml-2 space-y-1">
+                        <li>Click the "TTS" button to enable voice responses</li>
+                        <li>Uses browser's built-in speech synthesis</li>
+                        <li>Voice selection depends on user's operating system</li>
+                      </ul>
+                      <p class="mt-3 text-amber-700">⚠️ Voice requires HTTPS (works on GitHub Pages, localhost)</p>
+                    </div>
+                  </details>
+
+                  <!-- API Key Security -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">Is my API key secure?</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 space-y-2 border-t border-slate-200">
+                      <p><strong>Yes, when added correctly:</strong></p>
+                      <ul class="list-disc list-inside ml-2 space-y-1">
+                        <li>API keys are stored in <code class="bg-slate-100 px-1 rounded">localStorage</code> (browser only)</li>
+                        <li>Never uploaded to GitHub or any server</li>
+                        <li>Each user/customer adds their own key via the dashboard</li>
+                        <li>Keys are sent directly from browser → AI provider (no middleman)</li>
+                      </ul>
+                      <p class="mt-3 text-red-700"><strong>⚠️ NEVER put API keys in your code files!</strong></p>
+                      <p class="text-red-600 text-xs">GitHub will detect and block your repository if you do.</p>
+                    </div>
+                  </details>
+
+                  <!-- Email Confirmations -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">How do email confirmations work?</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 space-y-2 border-t border-slate-200">
+                      <p><strong>Two options available:</strong></p>
+                      <div class="mt-2 p-3 bg-blue-50 rounded-lg">
+                        <p class="font-medium text-blue-900">Option 1: Mailto (Simple)</p>
+                        <p class="text-blue-700 text-xs mt-1">Opens the user's email client with a pre-filled message. No setup required, but user must click "send".</p>
+                      </div>
+                      <div class="mt-2 p-3 bg-green-50 rounded-lg">
+                        <p class="font-medium text-green-900">Option 2: EmailJS (Automatic)</p>
+                        <p class="text-green-700 text-xs mt-1">Sends emails automatically in the background. Free tier: 200 emails/month. Setup takes 5 minutes at <a href="https://emailjs.com" target="_blank" class="underline">emailjs.com</a></p>
+                      </div>
+                      <p class="mt-3 text-sm"><strong>EmailJS Setup:</strong></p>
+                      <ol class="list-decimal list-inside ml-2 space-y-1 text-xs">
+                        <li>Create free account at emailjs.com</li>
+                        <li>Add an email service (Gmail, Outlook, etc.)</li>
+                        <li>Create an email template</li>
+                        <li>Copy Service ID, Template ID, and Public Key to the dashboard</li>
+                      </ol>
+                    </div>
+                  </details>
+
+                  <!-- Multiple Customers -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">How do I deploy for multiple customers?</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 space-y-2 border-t border-slate-200">
+                      <p><strong>Three approaches:</strong></p>
+                      <div class="mt-2 p-3 bg-purple-50 rounded-lg">
+                        <p class="font-medium text-purple-900">1. Separate Repositories (Recommended)</p>
+                        <p class="text-purple-700 text-xs mt-1">Create a new GitHub repo for each customer. Each gets their own URL like <code>customer1.github.io/assistant</code></p>
+                      </div>
+                      <div class="mt-2 p-3 bg-indigo-50 rounded-lg">
+                        <p class="font-medium text-indigo-900">2. Config URL Parameter</p>
+                        <p class="text-indigo-700 text-xs mt-1">One deployment, multiple configs. Use: <code>?configUrl=https://example.com/customer1.json</code></p>
+                      </div>
+                      <div class="mt-2 p-3 bg-cyan-50 rounded-lg">
+                        <p class="font-medium text-cyan-900">3. Subdirectories</p>
+                        <p class="text-cyan-700 text-xs mt-1">Put each customer in a folder: <code>/customer1/index.html</code>, <code>/customer2/index.html</code></p>
+                      </div>
+                    </div>
+                  </details>
+
+                  <!-- Customization -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">What can I customize?</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 border-t border-slate-200">
+                      <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <p class="font-medium mb-2">🎨 Branding</p>
+                          <ul class="list-disc list-inside ml-2 space-y-1 text-xs">
+                            <li>Business logo (upload or URL)</li>
+                            <li>Brand color (any hex color)</li>
+                            <li>Widget position (4 corners)</li>
+                            <li>Business name & contact info</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <p class="font-medium mb-2">🛠️ Services</p>
+                          <ul class="list-disc list-inside ml-2 space-y-1 text-xs">
+                            <li>Unlimited services</li>
+                            <li>Name, description, duration, price</li>
+                            <li>Displayed in booking form</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <p class="font-medium mb-2">❓ FAQs</p>
+                          <ul class="list-disc list-inside ml-2 space-y-1 text-xs">
+                            <li>Unlimited Q&A pairs</li>
+                            <li>Used for local AI matching</li>
+                            <li>Sent to AI for context</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <p class="font-medium mb-2">🕐 Hours</p>
+                          <ul class="list-disc list-inside ml-2 space-y-1 text-xs">
+                            <li>Per-day schedule</li>
+                            <li>Multiple time ranges per day</li>
+                            <li>Closed days supported</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </details>
+
+                  <!-- Free vs Paid -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">Is this really free? What's the catch?</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 space-y-2 border-t border-slate-200">
+                      <p><strong>100% free for most use cases:</strong></p>
+                      <table class="w-full text-xs mt-2 border-collapse">
+                        <tr class="border-b border-slate-200">
+                          <td class="py-2 font-medium">Hosting</td>
+                          <td class="py-2 text-green-600">Free (GitHub Pages, Netlify, Vercel)</td>
+                        </tr>
+                        <tr class="border-b border-slate-200">
+                          <td class="py-2 font-medium">Voice (Speech API)</td>
+                          <td class="py-2 text-green-600">Free (browser built-in)</td>
+                        </tr>
+                        <tr class="border-b border-slate-200">
+                          <td class="py-2 font-medium">AI (Groq)</td>
+                          <td class="py-2 text-green-600">Free tier: ~30 requests/min</td>
+                        </tr>
+                        <tr class="border-b border-slate-200">
+                          <td class="py-2 font-medium">Email (EmailJS)</td>
+                          <td class="py-2 text-green-600">Free: 200/month, $5/mo for more</td>
+                        </tr>
+                        <tr>
+                          <td class="py-2 font-medium">This code</td>
+                          <td class="py-2 text-green-600">Free forever, no license restrictions</td>
+                        </tr>
+                      </table>
+                      <p class="mt-3 text-slate-600">The only cost comes from high-volume AI usage. Groq's free tier handles most small businesses easily.</p>
+                    </div>
+                  </details>
+
+                  <!-- Offline/Local Mode -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">Can it work without an AI API?</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 space-y-2 border-t border-slate-200">
+                      <p><strong>Yes! Local mode works without any API:</strong></p>
+                      <ul class="list-disc list-inside ml-2 space-y-1">
+                        <li>Keyword matching for services, hours, pricing</li>
+                        <li>Jaccard similarity search on your FAQs</li>
+                        <li>Booking form still works perfectly</li>
+                        <li>Voice input/output still works</li>
+                      </ul>
+                      <p class="mt-3 text-indigo-700">💡 <strong>Pro tip:</strong> Add lots of FAQs in local mode for best results. The AI will find the closest match automatically.</p>
+                    </div>
+                  </details>
+
+                  <!-- Mobile Support -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">Does it work on mobile devices?</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 space-y-2 border-t border-slate-200">
+                      <p><strong>Yes! Fully responsive design:</strong></p>
+                      <ul class="list-disc list-inside ml-2 space-y-1">
+                        <li>Widget adapts to screen size</li>
+                        <li>Touch-friendly buttons and inputs</li>
+                        <li>Voice works on iOS Safari and Android Chrome</li>
+                        <li>Booking form is mobile-optimized</li>
+                      </ul>
+                      <p class="mt-3 text-amber-700">⚠️ Some older browsers may not support voice. Text chat always works.</p>
+                    </div>
+                  </details>
+
+                  <!-- Troubleshooting -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">Common issues & troubleshooting</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 space-y-3 border-t border-slate-200">
+                      <div class="p-3 bg-red-50 rounded-lg">
+                        <p class="font-medium text-red-900">❌ "GitHub blocked my repository"</p>
+                        <p class="text-red-700 text-xs mt-1">You accidentally included an API key in the code. Remove it, add via dashboard instead.</p>
+                      </div>
+                      <div class="p-3 bg-amber-50 rounded-lg">
+                        <p class="font-medium text-amber-900">❌ "Voice not working"</p>
+                        <p class="text-amber-700 text-xs mt-1">Ensure you're on HTTPS. Grant microphone permission. Try Chrome or Edge.</p>
+                      </div>
+                      <div class="p-3 bg-orange-50 rounded-lg">
+                        <p class="font-medium text-orange-900">❌ "AI not responding"</p>
+                        <p class="text-orange-700 text-xs mt-1">Check API key is correct. Verify base URL and model name. Check browser console for errors.</p>
+                      </div>
+                      <div class="p-3 bg-yellow-50 rounded-lg">
+                        <p class="font-medium text-yellow-900">❌ "Config not saving"</p>
+                        <p class="text-yellow-700 text-xs mt-1">localStorage might be disabled. Try incognito mode or check browser privacy settings.</p>
+                      </div>
+                      <div class="p-3 bg-blue-50 rounded-lg">
+                        <p class="font-medium text-blue-900">❌ "Widget not appearing"</p>
+                        <p class="text-blue-700 text-xs mt-1">Check for JavaScript errors in console. Ensure the page has <code>&lt;div id="app"&gt;</code></p>
+                      </div>
+                    </div>
+                  </details>
+
+                  <!-- Data Privacy -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">Where is my data stored?</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 space-y-2 border-t border-slate-200">
+                      <p><strong>All data stays local by default:</strong></p>
+                      <table class="w-full text-xs mt-2 border-collapse">
+                        <tr class="border-b border-slate-200">
+                          <td class="py-2 font-medium">Configuration</td>
+                          <td class="py-2">Browser localStorage</td>
+                        </tr>
+                        <tr class="border-b border-slate-200">
+                          <td class="py-2 font-medium">Booking records</td>
+                          <td class="py-2">Browser localStorage</td>
+                        </tr>
+                        <tr class="border-b border-slate-200">
+                          <td class="py-2 font-medium">Chat history</td>
+                          <td class="py-2">Browser memory (session only)</td>
+                        </tr>
+                        <tr class="border-b border-slate-200">
+                          <td class="py-2 font-medium">AI conversations</td>
+                          <td class="py-2">Sent to AI provider (Groq, OpenAI, etc.)</td>
+                        </tr>
+                        <tr>
+                          <td class="py-2 font-medium">Emails</td>
+                          <td class="py-2">Sent via EmailJS or user's email client</td>
+                        </tr>
+                      </table>
+                      <p class="mt-3 text-green-700">✅ No data is sent to any server we control. You own everything.</p>
+                    </div>
+                  </details>
+
+                  <!-- Advanced: Custom Integration -->
+                  <details class="group border border-slate-200 rounded-xl overflow-hidden">
+                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+                      <span class="font-medium">Can I integrate with my existing systems?</span>
+                      <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+                    </summary>
+                    <div class="p-4 text-sm text-slate-700 space-y-2 border-t border-slate-200">
+                      <p><strong>Yes! Premium Fetchers allow API integration:</strong></p>
+                      <ul class="list-disc list-inside ml-2 space-y-1">
+                        <li><strong>Services URL:</strong> Fetch services from your backend</li>
+                        <li><strong>FAQs URL:</strong> Pull FAQs from a CMS or database</li>
+                        <li><strong>Hours URL:</strong> Sync hours from scheduling software</li>
+                      </ul>
+                      <p class="mt-3"><strong>Expected JSON formats:</strong></p>
+                      <pre class="mt-2 text-xs bg-slate-100 p-3 rounded-lg overflow-x-auto">// Services: Array of objects
+[{"name": "...", "price": 99, "durationMins": 30, "description": "..."}]
+
+// FAQs: Array of objects  
+[{"q": "Question?", "a": "Answer..."}]
+
+// Hours: Object with day keys
+{"mon": ["09:00-17:00"], "tue": ["09:00-17:00"], ...}</pre>
+                    </div>
+                  </details>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1043,12 +1382,14 @@ git push -u origin main</pre>
     function loadConfig(){
       const saved = safeJsonParse(localStorage.getItem(STORAGE_KEY) || "");
       const cfg = saved && typeof saved === 'object' ? saved : deepClone(DEFAULT_CONFIG);
+      // Ensure defaults for nested structures if they are missing
       cfg.version = 2;
       cfg.services = Array.isArray(cfg.services) ? cfg.services : deepClone(DEFAULT_CONFIG.services);
       cfg.faqs = Array.isArray(cfg.faqs) ? cfg.faqs : deepClone(DEFAULT_CONFIG.faqs);
       cfg.hours = cfg.hours && typeof cfg.hours === 'object' ? cfg.hours : deepClone(DEFAULT_CONFIG.hours);
       cfg.email = cfg.email && typeof cfg.email === 'object' ? cfg.email : deepClone(DEFAULT_CONFIG.email);
       cfg.ai = cfg.ai && typeof cfg.ai === 'object' ? cfg.ai : deepClone(DEFAULT_CONFIG.ai);
+      if(!cfg.ai.openai) cfg.ai.openai = deepClone(DEFAULT_CONFIG.ai.openai);
       return cfg;
     }
 
@@ -1591,18 +1932,38 @@ git push -u origin main</pre>
       return new URL(location.href).searchParams.get('widget') === '1';
     }
 
-    async function maybeLoadRemoteConfig(cfg){
+    async function maybeLoadRemoteConfig(localCfg){
       const u = new URL(location.href);
       const configUrl = u.searchParams.get('configUrl');
-      if(!configUrl) return cfg;
+      if(!configUrl) return localCfg;
       try{
         const res = await fetch(configUrl, {cache:'no-store'});
         if(!res.ok) throw new Error(`HTTP ${res.status}`);
         const remote = await res.json();
-        return {...cfg, ...remote, services: remote.services ?? cfg.services, faqs: remote.faqs ?? cfg.faqs, hours: remote.hours ?? cfg.hours};
+        
+        // Merge strategy: remote config wins EXCEPT for secrets stored in localStorage
+        const merged = { ...localCfg, ...remote };
+        
+        // Preserve local AI secrets if remote doesn't have them (which it shouldn't)
+        if (localCfg.ai?.openai?.apiKey && !remote.ai?.openai?.apiKey) {
+          merged.ai = merged.ai || {};
+          merged.ai.openai = merged.ai.openai || {};
+          merged.ai.openai.apiKey = localCfg.ai.openai.apiKey;
+        }
+        
+        // Preserve local EmailJS secrets
+        if (localCfg.email?.emailjs?.publicKey && !remote.email?.emailjs?.publicKey) {
+          merged.email = merged.email || {};
+          merged.email.emailjs = merged.email.emailjs || {};
+          merged.email.emailjs.publicKey = localCfg.email.emailjs.publicKey;
+          merged.email.emailjs.serviceId = merged.email.emailjs.serviceId || localCfg.email.emailjs.serviceId;
+          merged.email.emailjs.templateId = merged.email.emailjs.templateId || localCfg.email.emailjs.templateId;
+        }
+
+        return merged;
       } catch (e){
         console.warn('Config load failed', e);
-        return cfg;
+        return localCfg;
       }
     }
 
@@ -1843,6 +2204,72 @@ git push -u origin main</pre>
           });
         });
       };
+
+      // Embed Code Generator
+      $('#btnGenerateEmbed').addEventListener('click', () => {
+        const url = window.location.origin + window.location.pathname + '?widget=1';
+        const code = `<!-- AI Voice Secretary Widget -->\n<div id="ai-secretary-container"></div>\n<script>\n(function(){\n  var container = document.getElementById('ai-secretary-container');\n  var iframe = document.createElement('iframe');\n  iframe.src = '${url}';\n  iframe.style.cssText = 'position:fixed;bottom:20px;right:20px;width:380px;height:600px;border:none;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,0.2);border-radius:16px;';\n  container.appendChild(iframe);\n})();\n<\/script>`;
+        navigator.clipboard.writeText(code);
+        toast('Embed snippet copied to clipboard!');
+      });
+
+      // AI Provider extras
+      $('#btnAiQuickGroq').addEventListener('click', () => {
+        $('#cfgAiBaseUrl').value = 'https://api.groq.com/openai/v1';
+        $('#cfgAiModel').value = 'llama-3.3-70b-versatile';
+        toast('Groq settings applied!');
+      });
+
+      $('#btnShowKey').addEventListener('click', (e) => {
+        const inp = $('#cfgAiKey');
+        const isPass = inp.type === 'password';
+        inp.type = isPass ? 'text' : 'password';
+        e.target.textContent = isPass ? 'Hide' : 'Show';
+      });
+
+      $('#btnTestAi').addEventListener('click', async () => {
+        readBack();
+        const o = cfg.ai?.openai || {};
+        const status = $('#testAiStatus');
+        if(!o.apiKey){
+          status.textContent = '❌ Missing API Key';
+          status.className = 'text-xs font-medium text-red-600';
+          return;
+        }
+        
+        $('#btnTestAi').disabled = true;
+        status.textContent = '⏳ Testing...';
+        status.className = 'text-xs font-medium text-slate-500';
+
+        try {
+          const res = await fetch(o.baseUrl.replace(/\/$/, '') + '/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${o.apiKey}`
+            },
+            body: JSON.stringify({
+              model: o.model,
+              messages: [{role:'user', content: 'Say "Connection successful!"'}],
+              max_tokens: 10
+            })
+          });
+          if(res.ok) {
+            status.textContent = '✅ Success!';
+            status.className = 'text-xs font-medium text-green-600';
+          } else {
+            const err = await res.text();
+            status.textContent = `❌ Failed (${res.status})`;
+            status.className = 'text-xs font-medium text-red-600';
+            console.error(err);
+          }
+        } catch (e) {
+          status.textContent = '❌ Error';
+          status.className = 'text-xs font-medium text-red-600';
+        } finally {
+          $('#btnTestAi').disabled = false;
+        }
+      });
 
       // Fetchers
       $('#btnFetchAll').addEventListener('click', async () => {
